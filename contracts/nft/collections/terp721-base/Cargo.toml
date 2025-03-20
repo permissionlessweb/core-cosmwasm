@@ -21,8 +21,6 @@ exclude = [
 crate-type = ["cdylib", "rlib"]
 
 [features]
-# for more explicit tests, cargo test --features=backtraces
-backtraces = ["cosmwasm-std/backtraces"]
 # use library feature to disable all instantiate/execute/query exports
 library = []
 
@@ -34,10 +32,10 @@ cw721           = { workspace = true }
 cw-storage-plus = { workspace = true }
 cw-utils        = { workspace = true }
 serde           = { workspace = true }
-terp721           = { workspace = true }
-terp-sdk         = { workspace = true }
+terp721         = { workspace = true }
+terp-sdk        = { workspace = true }
 thiserror       = { workspace = true }
 url             = { workspace = true }
-cw-ownable = { workspace = true }
-cw721-base = { workspace = true, features = ["library"]}
+cw-ownable      = { workspace = true }
+cw721-base      = { workspace = true, features = ["library"]}
 

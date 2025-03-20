@@ -12,5 +12,5 @@ license     = { workspace = true }
 cosmwasm-std    = { workspace = true }
 cw-utils        = { workspace = true }
 serde           = { workspace = true }
-terp-sdk       = { path = "../../utils/terp-sdk", version = "0.1.0" }
+terp-sdk     = { workspace = true }
 thiserror       = { workspace = true }

@@ -21,8 +21,6 @@ exclude = [
 crate-type = ["cdylib", "rlib"]
 
 [features]
-# for more explicit tests, cargo test --features=backtraces
-backtraces = ["cosmwasm-std/backtraces"]
 # use library feature to disable all instantiate/execute/query exports
 library = []
 
@@ -60,7 +58,7 @@ base-factory          = { workspace = true }
 base-minter           = { workspace = true }
 terp721-nt            = { workspace = true }
 terp-code-controllers = { workspace = true }
-cw-ownable = "0.5.1"
+cw-ownable      = { workspace = true }
 
 [dev-dependencies]
 serde           = { workspace = true }
