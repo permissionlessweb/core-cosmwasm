@@ -3,7 +3,7 @@ use cosmwasm_std::{
     from_json, to_json_binary, Coin, ContractResult, Empty, OwnedDeps, Querier, QuerierResult,
     QueryRequest, SystemError, SystemResult, WasmQuery,
 };
-use cw721::{Cw721QueryMsg, OwnerOfResponse};
+use cw721::msg::{Cw721QueryMsg, OwnerOfResponse};
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
@@ -61,7 +61,8 @@ impl WasmMockQuerier {
     pub fn handle_query(&self, request: &QueryRequest<Empty>) -> QuerierResult {
         match &request {
             QueryRequest::Wasm(WasmQuery::Smart { contract_addr, msg }) => {
-                match from_json(msg).unwrap() {
+                let res: Cw721QueryMsg<Empty, Empty, Empty> = from_json(msg).unwrap();
+                match res {
                     Cw721QueryMsg::OwnerOf { token_id, .. } => {
                         let nft_owners = self.nft_querier.owners.get(contract_addr).unwrap();
                         let owner = nft_owners.get(&token_id).unwrap();

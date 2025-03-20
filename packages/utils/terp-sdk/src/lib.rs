@@ -2,25 +2,20 @@ mod msg;
 mod query;
 mod route;
 
-
 pub const NATIVE_DENOM: &str = "uterp";
 pub const TEST_BOND_DENOM: &str = "uterpx";
 pub const TEST_FEE_DENOM: &str = "uthiolx";
 pub const GENESIS_MINT_START_TIME: u64 = 1647032400000000000;
 
+use cosmwasm_std::{coin, coins, Addr, BankMsg, Coin, CosmosMsg};
+// pub use msg::{TerpMsg, TerpMsgWrapper};
 
-use cosmwasm_std::{coin, coins, Addr, BankMsg, Coin};
-pub use msg::{
-     create_fund_community_pool_msg,
-     TerpMsg, TerpMsgWrapper,
-};
+// pub type Response = cosmwasm_std::Response;
+// pub type SubMsg = cosmwasm_std::SubMsg<TerpMsgWrapper>;
+// pub type CosmosMsg = cosmwasm_std::CosmosMsg<TerpMsgWrapper>;
 
-pub type Response = cosmwasm_std::Response;
-pub type SubMsg = cosmwasm_std::SubMsg<TerpMsgWrapper>;
-pub type CosmosMsg = cosmwasm_std::CosmosMsg<TerpMsgWrapper>;
-
-pub use query::TerpQuery;
-pub use route::TerpRoute;
+// pub use query::TerpQuery;
+// pub use route::TerpRoute;
 
 // This export is added to all contracts that import this package, signifying that they require
 // "terpnet" support on the chain they run on.
@@ -70,4 +65,8 @@ pub fn send_thiols_msg(to_address: &Addr, amount: impl Into<u128>) -> BankMsg {
         to_address: to_address.to_string(),
         amount: thiols(amount),
     }
+}
+
+pub fn create_fund_community_pool_msg(amount: Vec<Coin>) -> CosmosMsg {
+    CosmosMsg::Bank(cosmwasm_std::BankMsg::Burn { amount }).into()
 }

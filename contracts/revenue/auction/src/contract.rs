@@ -1,8 +1,9 @@
 use cosmwasm_std::{
-    entry_point, from_json, to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response,
-    StdError, StdResult, Uint128,
+    entry_point, from_json, to_json_binary, Binary, Deps, DepsMut, Empty, Env, MessageInfo,
+    Response, StdError, StdResult, Uint128,
 };
-use cw721::msg::Cw721ReceiveMsg;
+use cw721::msg::{Cw721ExecuteMsg, Cw721QueryMsg};
+use cw721::receiver::Cw721ReceiveMsg;
 use terp_marketplace_utils::auction::{
     Cw721HookMsg, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg,
 };
@@ -20,6 +21,9 @@ use crate::querier::{
     query_royalty_admin, query_royalty_fee, query_state,
 };
 use crate::state::{Config, State, CONFIG, STATE};
+
+pub type AuctionCw721ExecuteMsg = Cw721ExecuteMsg<Empty, Empty, Empty>;
+pub type AuctionCw721QueryMsg = Cw721QueryMsg<Empty, Empty, Empty>;
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(

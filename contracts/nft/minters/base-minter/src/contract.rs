@@ -6,17 +6,20 @@ use base_factory::state::Extension;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_json_binary, Addr, Binary, CosmosMsg, Decimal, Deps, DepsMut, Empty, Env, MessageInfo, Reply,
-    StdResult, Timestamp, WasmMsg,
+    to_json_binary, Addr, Binary, CosmosMsg, Decimal, Deps, DepsMut, Empty, Env, Fraction,
+    MessageInfo, Reply, Response, StdResult, Timestamp, WasmMsg,
 };
 use cw2::set_contract_version;
-use cw_utils::{must_pay, nonpayable, parse_reply_instantiate_data};
-use terp_fee::checked_fair_burn;
+use cw721::msg::CollectionInfoAndExtensionResponse;
+use cw721_base::msg::{
+    CollectionInfoResponse, ExecuteMsg as cw721ExecuteMsg, InstantiateMsg as Sg721InstantiateMsg,
+    QueryMsg as cw721QueryMsg,
+};
+use cw_utils::{must_pay, nonpayable, parse_instantiate_response_data};
 use factory_utils::query::FactoryUtilsQueryMsg;
 use minter_utils::{QueryMsg, Status, StatusResponse, SudoMsg};
-use cw721::{ExecuteMsg as cw721ExecuteMsg, InstantiateMsg as Sg721InstantiateMsg};
-use cw721_base::msg::{CollectionInfoResponse, QueryMsg as cw721QueryMsg};
-use terp_sdk::{Response, SubMsg, NATIVE_DENOM};
+use terp_fee::checked_fair_burn;
+use terp_sdk::NATIVE_DENOM;
 use url::Url;
 
 const CONTRACT_NAME: &str = "crates.io:terp-base-minter";
@@ -119,10 +122,11 @@ pub fn execute_mint_sender(
 
     // This is a 1:1 minter, minted at min_mint_price
     // Should mint and then list on the marketplace for secondary sales
-    let collection_info: CollectionInfoResponse = deps.querier.query_wasm_smart(
-        collection_address.clone(),
-        &cw721QueryMsg::CollectionInfo {},
-    )?;
+    let collection_info: CollectionInfoAndExtensionResponse<Empty> =
+        deps.querier.query_wasm_smart(
+            collection_address.clone(),
+            &cw721QueryMsg::GetCollectionInfoAndExtension {},
+        )?;
     // allow only cw721 creator address to mint
     if collection_info.creator != info.sender {
         return Err(ContractError::Unauthorized(
@@ -146,7 +150,10 @@ pub fn execute_mint_sender(
 
     // Create network fee msgs
     let mint_fee_percent = Decimal::bps(factory_params.mint_fee_bps);
-    let network_fee = config.mint_price.amount * mint_fee_percent;
+    let network_fee = config
+        .mint_price
+        .amount
+        .checked_multiply_ratio(mint_fee_percent.numerator(), mint_fee_percent.denominator())?;
     // For the base 1/1 minter, the entire mint price should be Fair Burned
     if network_fee != funds_sent {
         return Err(ContractError::InvalidMintPrice {});
@@ -154,7 +161,7 @@ pub fn execute_mint_sender(
     checked_fair_burn(&info, network_fee.u128(), None, &mut res)?;
 
     // Create mint msgs
-    let mint_msg = cw721ExecuteMsg::<Extension, Empty>::Mint {
+    let mint_msg = cw721ExecuteMsg::Mint {
         token_id: increment_token_index(deps.storage)?.to_string(),
         owner: info.sender.to_string(),
         token_uri: Some(token_uri.clone()),
@@ -185,7 +192,7 @@ pub fn execute_update_start_trading_time(
 
     let collection_info: CollectionInfoResponse = deps.querier.query_wasm_smart(
         cw721_contract_addr.clone(),
-        &cw721QueryMsg::CollectionInfo {},
+        &cw721QueryMsg::GetCollectionInfoAndExtension {},
     )?;
     if info.sender != collection_info.creator {
         return Err(ContractError::Unauthorized(
@@ -206,7 +213,7 @@ pub fn execute_update_start_trading_time(
     // execute cw721 contract
     let msg = WasmMsg::Execute {
         contract_addr: cw721_contract_addr.to_string(),
-        msg: to_json_binary(&cw721ExecuteMsg::<Extension, Empty>::UpdateStartTradingTime(start_time))?,
+        msg: to_json_binary(&cw721ExecuteMsg::UpdateStartTradingTime(start_time))?,
         funds: vec![],
     };
 
@@ -275,7 +282,7 @@ pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractE
         return Err(ContractError::InvalidReplyID {});
     }
 
-    let reply = parse_reply_instantiate_data(msg);
+    let reply = parse_instantiate_response_data(msg);
     match reply {
         Ok(res) => {
             let collection_address = res.contract_address;

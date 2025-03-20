@@ -1,17 +1,18 @@
-use cosmwasm_std::testing::{mock_env, mock_info, MOCK_CONTRACT_ADDR};
+use cosmwasm_std::testing::{message_info, mock_env, MOCK_CONTRACT_ADDR};
 use cosmwasm_std::{
-    to_json_binary, BankMsg, Coin, CosmosMsg, Decimal, DepsMut, Timestamp, Uint128, WasmMsg,
+    to_json_binary, Addr, BankMsg, Coin, CosmosMsg, Decimal, DepsMut, Timestamp, Uint128, WasmMsg,
 };
-use cw721::{Cw721ExecuteMsg, Cw721ReceiveMsg};
+use cw721::msg::Cw721ExecuteMsg;
+use cw721::receiver::Cw721ReceiveMsg;
+
+use std::str::FromStr;
 use terp_marketplace_utils::auction::{
-    AllRoyaltyListResponse, AllRoyaltyFeeResponse, AuctionResponse, AuctionType,
+    AllRoyaltyFeeResponse, AllRoyaltyListResponse, AuctionResponse, AuctionType,
     CalculatePriceResponse, ConfigResponse, Cw721HookMsg, ExecuteMsg, InstantiateMsg,
     RoyaltyAdminResponse, RoyaltyFeeResponse, RoyaltyResponse, StateResponse,
 };
-use std::str::FromStr;
 
-
-use crate::contract::{execute, instantiate};
+use crate::contract::{execute, instantiate, AuctionCw721ExecuteMsg};
 use crate::error::ContractError;
 use crate::mock_querier::mock_dependencies;
 use crate::querier::{
@@ -30,7 +31,7 @@ fn setup_contract(deps: DepsMut, accepted_denom: Vec<String>) {
         protocol_addr: "collector".to_string(),
         max_royalty_fee: Decimal::percent(20), // 20%
     };
-    let info = mock_info("owner", &[]);
+    let info = message_info(&Addr::unchecked("owner"), &[]);
     let env = mock_env();
     let res = instantiate(deps, env, info, msg).unwrap();
     assert_eq!(0, res.messages.len());
@@ -74,20 +75,20 @@ fn settle_hook() {
         "satoshi".to_string(),
     );
     let env = mock_env();
-    let info = mock_info("random", &[]);
+    let info = message_info(&Addr::unchecked("random"), &[]);
     let err = execute(deps.as_mut(), env.clone(), info, hook_msg.clone()).unwrap_err();
     match err {
         ContractError::Unauthorized { .. } => {}
         e => panic!("unexcted error: {}", e),
     };
-    let info = mock_info(MOCK_CONTRACT_ADDR, &[]);
+    let info = message_info(&Addr::unchecked(MOCK_CONTRACT_ADDR), &[]);
     execute(deps.as_mut(), env.clone(), info, hook_msg.clone()).unwrap();
     let wrong_msg = ExecuteMsg::SettleHook {
         nft_contract: "nft".to_string(),
         token_id: "bitcoin".to_string(),
         owner: "vitalik".to_string(),
     };
-    let info = mock_info(MOCK_CONTRACT_ADDR, &[]);
+    let info = message_info(&Addr::unchecked(MOCK_CONTRACT_ADDR), &[]);
     let err = execute(deps.as_mut(), env.clone(), info, wrong_msg.clone()).unwrap_err();
     match err {
         ContractError::InvalidAsset { .. } => {}
@@ -102,7 +103,7 @@ fn create_buynow() {
 
     // receive nft
     let env = mock_env();
-    let info = mock_info("nft", &[]);
+    let info = message_info(&Addr::unchecked("nft"), &[]);
     let nft_receive_msg = Cw721ReceiveMsg {
         sender: "satoshi".into(),
         token_id: "bitcoin".to_string(),
@@ -177,7 +178,7 @@ fn create_buynow() {
     };
 
     let create_buynow_msg = ExecuteMsg::ReceiveNft(nft_receive_msg);
-    let info = mock_info("nft", &[]);
+    let info = message_info(&Addr::unchecked("nft"), &[]);
     let env = mock_env();
     let err = execute(deps.as_mut(), env, info, create_buynow_msg).unwrap_err();
     match err {
@@ -198,7 +199,7 @@ fn create_buynow() {
     };
 
     let create_buynow_msg = ExecuteMsg::ReceiveNft(nft_receive_msg);
-    let info = mock_info("nft", &[]);
+    let info = message_info(&Addr::unchecked("nft"), &[]);
     let env = mock_env();
     let err = execute(deps.as_mut(), env, info, create_buynow_msg).unwrap_err();
     match err {
@@ -214,7 +215,7 @@ fn create_auction() {
 
     // receive nft
     let env = mock_env();
-    let info = mock_info("nft", &[]);
+    let info = message_info(&Addr::unchecked("nft"), &[]);
     let nft_receive_msg = Cw721ReceiveMsg {
         sender: "satoshi".into(),
         token_id: "bitcoin".to_string(),
@@ -283,7 +284,7 @@ fn settle_buynow() {
 
     // receive nft
     let env = mock_env();
-    let info = mock_info("nft", &[]);
+    let info = message_info(&Addr::unchecked("nft"), &[]);
     let nft_receive_msg = Cw721ReceiveMsg {
         sender: "satoshi".into(),
         token_id: "bitcoin".to_string(),
@@ -302,7 +303,7 @@ fn settle_buynow() {
         auction_id: Uint128::zero(),
     };
     let env = mock_env();
-    let info = mock_info("buyer", &[]);
+    let info = message_info(&Addr::unchecked("buyer"), &[]);
     let err = execute(deps.as_mut(), env, info, place_bid_msg.clone()).unwrap_err();
     match err {
         ContractError::InvalidAmount { .. } => {}
@@ -310,7 +311,10 @@ fn settle_buynow() {
     }
     // place bid with fund in wrong denom
     let env = mock_env();
-    let info = mock_info("buyer", &[Coin::new(1_000000, "uusdc")]);
+    let info = message_info(
+        &Addr::unchecked("buyer"),
+        &[Coin::new(1_000000u128, "uusdc")],
+    );
     let err = execute(deps.as_mut(), env, info, place_bid_msg.clone()).unwrap_err();
     match err {
         ContractError::InvalidAmount { .. } => {}
@@ -318,9 +322,12 @@ fn settle_buynow() {
     }
     // place bid with fund in multiple denom
     let env = mock_env();
-    let info = mock_info(
-        "buyer",
-        &[Coin::new(1_000000, "uusdc"), Coin::new(1_000000, "uluna")],
+    let info = message_info(
+        &Addr::unchecked("buyer"),
+        &[
+            Coin::new(1_000000u128, "uusdc"),
+            Coin::new(1_000000u128, "uluna"),
+        ],
     );
     let err = execute(deps.as_mut(), env, info, place_bid_msg.clone()).unwrap_err();
     match err {
@@ -330,7 +337,10 @@ fn settle_buynow() {
     // place bid with correct fund
     let mut env = mock_env();
     env.block.time = Timestamp::from_seconds(100);
-    let info = mock_info("buyer", &[Coin::new(1_000000, "uluna")]);
+    let info = message_info(
+        &Addr::unchecked("buyer"),
+        &[Coin::new(1_000000u128, "uluna")],
+    );
     execute(deps.as_mut(), env.clone(), info, place_bid_msg.clone()).unwrap();
     let buynow = query_auction(deps.as_ref(), Uint128::zero()).unwrap();
     assert_eq!(
@@ -354,7 +364,10 @@ fn settle_buynow() {
         }
     );
     // trying to place bid again
-    let info = mock_info("buyer", &[Coin::new(1_000000, "uluna")]);
+    let info = message_info(
+        &Addr::unchecked("buyer"),
+        &[Coin::new(1_000000u128, "uluna")],
+    );
     let err = execute(deps.as_mut(), env.clone(), info, place_bid_msg.clone()).unwrap_err();
     match err {
         ContractError::InvalidAuction { .. } => {}
@@ -365,7 +378,7 @@ fn settle_buynow() {
         auction_id: Uint128::zero(),
     };
     env.block.time = Timestamp::from_seconds(120);
-    let info = mock_info("random", &[]);
+    let info = message_info(&Addr::unchecked("random"), &[]);
     let res = execute(deps.as_mut(), env.clone(), info, settle_msg.clone()).unwrap();
     assert_eq!(4, res.messages.len());
 
@@ -374,7 +387,7 @@ fn settle_buynow() {
         &send_fund_collector_msg.msg,
         &CosmosMsg::Bank(BankMsg::Send {
             to_address: "collector".into(),
-            amount: vec![Coin::new(10000, "uluna")]
+            amount: vec![Coin::new(10000u128, "uluna")]
         })
     );
 
@@ -383,7 +396,7 @@ fn settle_buynow() {
         &send_fund_seller_msg.msg,
         &CosmosMsg::Bank(BankMsg::Send {
             to_address: "satoshi".into(),
-            amount: vec![Coin::new(990000, "uluna")]
+            amount: vec![Coin::new(990000u128, "uluna")]
         })
     );
 
@@ -392,7 +405,7 @@ fn settle_buynow() {
         &send_nft_msg.msg,
         &CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: "nft".into(),
-            msg: to_json_binary(&Cw721ExecuteMsg::TransferNft {
+            msg: to_json_binary(&AuctionCw721ExecuteMsg::TransferNft {
                 token_id: "bitcoin".to_string(),
                 recipient: "buyer".into()
             })
@@ -439,14 +452,20 @@ fn settle_buynow() {
     );
 
     // trying to place bid again
-    let info = mock_info("buyer", &[Coin::new(1_000000, "uluna")]);
+    let info = message_info(
+        &Addr::unchecked("buyer"),
+        &[Coin::new(1_000000u128, "uluna")],
+    );
     let err = execute(deps.as_mut(), env.clone(), info, place_bid_msg.clone()).unwrap_err();
     match err {
         ContractError::InvalidAuction { .. } => {}
         e => panic!("unexcted error: {}", e),
     }
     // trying to settle again
-    let info = mock_info("buyer", &[Coin::new(1_000000, "uluna")]);
+    let info = message_info(
+        &Addr::unchecked("buyer"),
+        &[Coin::new(1_000000u128, "uluna")],
+    );
     let err = execute(deps.as_mut(), env.clone(), info, settle_msg.clone()).unwrap_err();
     match err {
         ContractError::InvalidAuction { .. } => {}
@@ -464,7 +483,7 @@ fn settle_buynow_with_royalty() {
         address: "admin".to_string(),
         enable: true,
     };
-    let info = mock_info("owner", &[]);
+    let info = message_info(&Addr::unchecked("owner"), &[]);
     let env = mock_env();
     execute(deps.as_mut(), env, info, set_royalty_admin_msg).unwrap();
     let set_royalty_msg = ExecuteMsg::SetRoyaltyFee {
@@ -472,13 +491,13 @@ fn settle_buynow_with_royalty() {
         creator: "creator".to_string(),
         royalty_fee: Decimal::percent(5),
     };
-    let info = mock_info("admin", &[]);
+    let info = message_info(&Addr::unchecked("admin"), &[]);
     let env = mock_env();
     execute(deps.as_mut(), env, info, set_royalty_msg).unwrap();
 
     // receive nft
     let env = mock_env();
-    let info = mock_info("nft", &[]);
+    let info = message_info(&Addr::unchecked("nft"), &[]);
     let nft_receive_msg = Cw721ReceiveMsg {
         sender: "satoshi".into(),
         token_id: "bitcoin".to_string(),
@@ -497,7 +516,7 @@ fn settle_buynow_with_royalty() {
         auction_id: Uint128::zero(),
     };
     let env = mock_env();
-    let info = mock_info("buyer", &[]);
+    let info = message_info(&Addr::unchecked("buyer"), &[]);
     let err = execute(deps.as_mut(), env, info, place_bid_msg.clone()).unwrap_err();
     match err {
         ContractError::InvalidAmount { .. } => {}
@@ -505,7 +524,10 @@ fn settle_buynow_with_royalty() {
     }
     // place bid with fund in wrong denom
     let env = mock_env();
-    let info = mock_info("buyer", &[Coin::new(1_000000, "uusdc")]);
+    let info = message_info(
+        &Addr::unchecked("buyer"),
+        &[Coin::new(1_000000u128, "uusdc")],
+    );
     let err = execute(deps.as_mut(), env, info, place_bid_msg.clone()).unwrap_err();
     match err {
         ContractError::InvalidAmount { .. } => {}
@@ -513,9 +535,12 @@ fn settle_buynow_with_royalty() {
     }
     // place bid with fund in multiple denom
     let env = mock_env();
-    let info = mock_info(
-        "buyer",
-        &[Coin::new(1_000000, "uusdc"), Coin::new(1_000000, "uluna")],
+    let info = message_info(
+        &Addr::unchecked("buyer"),
+        &[
+            Coin::new(1_000000u128, "uusdc"),
+            Coin::new(1_000000u128, "uluna"),
+        ],
     );
     let err = execute(deps.as_mut(), env, info, place_bid_msg.clone()).unwrap_err();
     match err {
@@ -525,7 +550,10 @@ fn settle_buynow_with_royalty() {
     // place bid with correct fund
     let mut env = mock_env();
     env.block.time = Timestamp::from_seconds(100);
-    let info = mock_info("buyer", &[Coin::new(1_000000, "uluna")]);
+    let info = message_info(
+        &Addr::unchecked("buyer"),
+        &[Coin::new(1_000000u128, "uluna")],
+    );
     execute(deps.as_mut(), env.clone(), info, place_bid_msg.clone()).unwrap();
     let buynow = query_auction(deps.as_ref(), Uint128::zero()).unwrap();
     assert_eq!(
@@ -549,7 +577,10 @@ fn settle_buynow_with_royalty() {
         }
     );
     // trying to place bid again
-    let info = mock_info("buyer", &[Coin::new(1_000000, "uluna")]);
+    let info = message_info(
+        &Addr::unchecked("buyer"),
+        &[Coin::new(1_000000u128, "uluna")],
+    );
     let err = execute(deps.as_mut(), env.clone(), info, place_bid_msg.clone()).unwrap_err();
     match err {
         ContractError::InvalidAuction { .. } => {}
@@ -560,7 +591,7 @@ fn settle_buynow_with_royalty() {
         auction_id: Uint128::zero(),
     };
     env.block.time = Timestamp::from_seconds(120);
-    let info = mock_info("random", &[]);
+    let info = message_info(&Addr::unchecked("random"), &[]);
     let res = execute(deps.as_mut(), env.clone(), info, settle_msg.clone()).unwrap();
     assert_eq!(5, res.messages.len());
 
@@ -569,7 +600,7 @@ fn settle_buynow_with_royalty() {
         &send_fund_collector_msg.msg,
         &CosmosMsg::Bank(BankMsg::Send {
             to_address: "collector".into(),
-            amount: vec![Coin::new(10000, "uluna")]
+            amount: vec![Coin::new(10000u128, "uluna")]
         })
     );
 
@@ -578,7 +609,7 @@ fn settle_buynow_with_royalty() {
         &send_fund_creator_msg.msg,
         &CosmosMsg::Bank(BankMsg::Send {
             to_address: "creator".into(),
-            amount: vec![Coin::new(50000, "uluna")]
+            amount: vec![Coin::new(50000u128, "uluna")]
         })
     );
 
@@ -587,7 +618,7 @@ fn settle_buynow_with_royalty() {
         &send_fund_seller_msg.msg,
         &CosmosMsg::Bank(BankMsg::Send {
             to_address: "satoshi".into(),
-            amount: vec![Coin::new(940000, "uluna")]
+            amount: vec![Coin::new(940000u128, "uluna")]
         })
     );
 
@@ -596,7 +627,7 @@ fn settle_buynow_with_royalty() {
         &send_nft_msg.msg,
         &CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: "nft".into(),
-            msg: to_json_binary(&Cw721ExecuteMsg::TransferNft {
+            msg: to_json_binary(&AuctionCw721ExecuteMsg::TransferNft {
                 token_id: "bitcoin".to_string(),
                 recipient: "buyer".into()
             })
@@ -642,14 +673,20 @@ fn settle_buynow_with_royalty() {
         }
     );
     // trying to place bid again
-    let info = mock_info("buyer", &[Coin::new(1_000000, "uluna")]);
+    let info = message_info(
+        &Addr::unchecked("buyer"),
+        &[Coin::new(1_000000u128, "uluna")],
+    );
     let err = execute(deps.as_mut(), env.clone(), info, place_bid_msg.clone()).unwrap_err();
     match err {
         ContractError::InvalidAuction { .. } => {}
         e => panic!("unexcted error: {}", e),
     }
     // trying to settle again
-    let info = mock_info("buyer", &[Coin::new(1_000000, "uluna")]);
+    let info = message_info(
+        &Addr::unchecked("buyer"),
+        &[Coin::new(1_000000u128, "uluna")],
+    );
     let err = execute(deps.as_mut(), env.clone(), info, settle_msg.clone()).unwrap_err();
     match err {
         ContractError::InvalidAuction { .. } => {}
@@ -664,7 +701,7 @@ fn settle_auction() {
 
     // receive nft
     let env = mock_env();
-    let info = mock_info("nft", &[]);
+    let info = message_info(&Addr::unchecked("nft"), &[]);
     let nft_receive_msg = Cw721ReceiveMsg {
         sender: "satoshi".into(),
         token_id: "bitcoin".to_string(),
@@ -683,7 +720,7 @@ fn settle_auction() {
         auction_id: Uint128::zero(),
     };
     let env = mock_env();
-    let info = mock_info("buyer", &[]);
+    let info = message_info(&Addr::unchecked("buyer"), &[]);
     let err = execute(deps.as_mut(), env, info, place_bid_msg.clone()).unwrap_err();
     match err {
         ContractError::InvalidAmount { .. } => {}
@@ -691,7 +728,10 @@ fn settle_auction() {
     }
     // place bid with fund in wrong denom
     let env = mock_env();
-    let info = mock_info("buyer", &[Coin::new(1_000000, "uusdc")]);
+    let info = message_info(
+        &Addr::unchecked("buyer"),
+        &[Coin::new(1_000000u128, "uluna")],
+    );
     let err = execute(deps.as_mut(), env, info, place_bid_msg.clone()).unwrap_err();
     match err {
         ContractError::InvalidAmount { .. } => {}
@@ -699,9 +739,12 @@ fn settle_auction() {
     }
     // place bid with fund in multiple denom
     let env = mock_env();
-    let info = mock_info(
-        "buyer",
-        &[Coin::new(1_000000, "uusdc"), Coin::new(1_000000, "uluna")],
+    let info = message_info(
+        &Addr::unchecked("buyer"),
+        &[
+            Coin::new(1_000000u128, "uusdc"),
+            Coin::new(1_000000u128, "uluna"),
+        ],
     );
     let err = execute(deps.as_mut(), env, info, place_bid_msg.clone()).unwrap_err();
     match err {
@@ -711,7 +754,7 @@ fn settle_auction() {
     // place bid with correct fund
     let mut env = mock_env();
     env.block.time = Timestamp::from_seconds(100);
-    let info = mock_info("buyer", &[Coin::new(1_000000, "uluna")]);
+    let info = message_info(&Addr::unchecked("buyer"), &[Coin::new(1_000000u128, "uluna")]);
     execute(deps.as_mut(), env.clone(), info, place_bid_msg.clone()).unwrap();
     let auction = query_auction(deps.as_ref(), Uint128::zero()).unwrap();
     assert_eq!(
@@ -735,21 +778,30 @@ fn settle_auction() {
         }
     );
     // bid with too low amount
-    let info = mock_info("fliper", &[Coin::new(1_000000, "uluna")]);
+    let info = message_info(
+        &Addr::unchecked("fliper"),
+        &[Coin::new(1_100000u128, "uluna")],
+    );
     let err = execute(deps.as_mut(), env.clone(), info, place_bid_msg.clone()).unwrap_err();
     match err {
         ContractError::InvalidAmount { .. } => {}
         e => panic!("unexcted error: {}", e),
     }
     // same person bid again
-    let info = mock_info("buyer", &[Coin::new(1_100000, "uluna")]);
+    let info = message_info(
+        &Addr::unchecked("buyer"),
+        &[Coin::new(1_100000u128, "uluna")],
+    );
     let err = execute(deps.as_mut(), env.clone(), info, place_bid_msg.clone()).unwrap_err();
     match err {
         ContractError::InvalidAuction { .. } => {}
         e => panic!("unexcted error: {}", e),
     }
     // fliper bid correctly
-    let info = mock_info("fliper", &[Coin::new(1_100000, "uluna")]);
+    let info = message_info(
+        &Addr::unchecked("fliper"),
+        &[Coin::new(1_100000u128, "uluna")],
+    );
     let res = execute(deps.as_mut(), env.clone(), info, place_bid_msg.clone()).unwrap();
     assert_eq!(1, res.messages.len());
     let send_fund_buyer_msg = res.messages.first().expect("no message");
@@ -757,7 +809,7 @@ fn settle_auction() {
         &send_fund_buyer_msg.msg,
         &CosmosMsg::Bank(BankMsg::Send {
             to_address: "buyer".into(),
-            amount: vec![Coin::new(1000000, "uluna")]
+            amount: vec![Coin::new(1000000u128, "uluna")]
         })
     );
     let auction = query_auction(deps.as_ref(), Uint128::zero()).unwrap();
@@ -783,7 +835,10 @@ fn settle_auction() {
     );
     // place bid to cause extension time
     env.block.time = Timestamp::from_seconds(86000);
-    let info = mock_info("buyer", &[Coin::new(1_210000, "uluna")]);
+    let info = message_info(
+        &Addr::unchecked("buyer"),
+        &[Coin::new(1_210000u128, "uluna")],
+    );
     let res = execute(deps.as_mut(), env.clone(), info, place_bid_msg.clone()).unwrap();
     assert_eq!(1, res.messages.len());
     let send_fund_fliper_msg = res.messages.first().expect("no message");
@@ -791,7 +846,7 @@ fn settle_auction() {
         &send_fund_fliper_msg.msg,
         &CosmosMsg::Bank(BankMsg::Send {
             to_address: "fliper".into(),
-            amount: vec![Coin::new(1100000, "uluna")]
+            amount: vec![Coin::new(1100000u128, "uluna")]
         })
     );
     let auction = query_auction(deps.as_ref(), Uint128::zero()).unwrap();
@@ -819,7 +874,7 @@ fn settle_auction() {
     let settle_msg = ExecuteMsg::Settle {
         auction_id: Uint128::zero(),
     };
-    let info = mock_info("random", &[]);
+    let info = message_info(&Addr::unchecked("random"), &[]);
     let err = execute(deps.as_mut(), env.clone(), info, settle_msg.clone()).unwrap_err();
     match err {
         ContractError::InvalidAuction { .. } => {}
@@ -828,7 +883,7 @@ fn settle_auction() {
 
     // settle
     env.block.time = Timestamp::from_seconds(86900);
-    let info = mock_info("random", &[]);
+    let info = message_info(&Addr::unchecked("random"), &[]);
     let res = execute(deps.as_mut(), env.clone(), info, settle_msg.clone()).unwrap();
     assert_eq!(4, res.messages.len());
 
@@ -837,7 +892,7 @@ fn settle_auction() {
         &send_fund_collector_msg.msg,
         &CosmosMsg::Bank(BankMsg::Send {
             to_address: "collector".into(),
-            amount: vec![Coin::new(12100, "uluna")]
+            amount: vec![Coin::new(12100u128, "uluna")]
         })
     );
 
@@ -846,7 +901,7 @@ fn settle_auction() {
         &send_fund_seller_msg.msg,
         &CosmosMsg::Bank(BankMsg::Send {
             to_address: "satoshi".into(),
-            amount: vec![Coin::new(1197900, "uluna")]
+            amount: vec![Coin::new(1197900u128, "uluna")]
         })
     );
 
@@ -855,7 +910,7 @@ fn settle_auction() {
         &send_nft_msg.msg,
         &CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: "nft".into(),
-            msg: to_json_binary(&Cw721ExecuteMsg::TransferNft {
+            msg: to_json_binary(&AuctionCw721ExecuteMsg::TransferNft {
                 token_id: "bitcoin".to_string(),
                 recipient: "buyer".into()
             })
@@ -901,14 +956,14 @@ fn settle_auction() {
         }
     );
     // trying to place bid again
-    let info = mock_info("buyer", &[Coin::new(1_000000, "uluna")]);
+    let info = message_info(&Addr::unchecked("buyer"), &[Coin::new(1_000000u128, "uluna")]);
     let err = execute(deps.as_mut(), env.clone(), info, place_bid_msg.clone()).unwrap_err();
     match err {
         ContractError::InvalidAuction { .. } => {}
         e => panic!("unexcted error: {}", e),
     }
     // trying to settle again
-    let info = mock_info("buyer", &[Coin::new(1_000000, "uluna")]);
+    let info = message_info(&Addr::unchecked("buyer"), &[Coin::new(1_000000u128, "uluna")]);
     let err = execute(deps.as_mut(), env.clone(), info, settle_msg.clone()).unwrap_err();
     match err {
         ContractError::InvalidAuction { .. } => {}
@@ -923,7 +978,7 @@ fn check_freeze_and_cancel_auction() {
 
     // create buy now
     let env = mock_env();
-    let info = mock_info("nft", &[]);
+    let info = message_info(&Addr::unchecked("nft"),&[]);
     let nft_receive_msg = Cw721ReceiveMsg {
         sender: "satoshi".into(),
         token_id: "bitcoin".to_string(),
@@ -939,7 +994,7 @@ fn check_freeze_and_cancel_auction() {
     execute(deps.as_mut(), env, info, create_buynow_msg).unwrap();
     // create another buynow
     let env = mock_env();
-    let info = mock_info("nft", &[]);
+    let info = message_info(&Addr::unchecked("nft"), &[]);
     let nft_receive_msg = Cw721ReceiveMsg {
         sender: "vitalik".into(),
         token_id: "ethereum".to_string(),
@@ -954,7 +1009,7 @@ fn check_freeze_and_cancel_auction() {
     execute(deps.as_mut(), env, info, create_buynow_msg).unwrap();
     // random guy freeze
     let env = mock_env();
-    let info = mock_info("random", &[]);
+    let info = message_info(&Addr::unchecked("random"), &[]);
     let freeze_msg = ExecuteMsg::AdminPause {};
     let err = execute(deps.as_mut(), env, info, freeze_msg.clone()).unwrap_err();
     match err {
@@ -963,7 +1018,7 @@ fn check_freeze_and_cancel_auction() {
     }
     // owner freeze
     let env = mock_env();
-    let info = mock_info("owner", &[]);
+    let info = message_info(&Addr::unchecked("owner"), &[]);
     execute(deps.as_mut(), env, info, freeze_msg.clone()).unwrap();
     let state = query_state(deps.as_ref()).unwrap();
     assert_eq!(
@@ -975,7 +1030,7 @@ fn check_freeze_and_cancel_auction() {
     );
     // create another buynow
     let env = mock_env();
-    let info = mock_info("nft", &[]);
+    let info = message_info(&Addr::unchecked("nft"), &[]);
     let nft_receive_msg = Cw721ReceiveMsg {
         sender: "charles".into(),
         token_id: "cardano".to_string(),
@@ -995,7 +1050,7 @@ fn check_freeze_and_cancel_auction() {
     }
     // place bid
     let env = mock_env();
-    let info = mock_info("buyer", &[Coin::new(1_000000, "uluna")]);
+    let info = message_info(&Addr::unchecked("buyer"), &[Coin::new(1_000000u128, "uluna")]);
     let place_bid_msg = ExecuteMsg::PlaceBid {
         auction_id: Uint128::zero(),
     };
@@ -1006,7 +1061,7 @@ fn check_freeze_and_cancel_auction() {
     }
     // random cancel auction
     let env = mock_env();
-    let info = mock_info("random", &[]);
+    let info = message_info(&Addr::unchecked("random"), &[]);
     let cancel_msg = ExecuteMsg::CancelAuction {
         auction_id: Uint128::zero(),
     };
@@ -1017,7 +1072,7 @@ fn check_freeze_and_cancel_auction() {
     }
     // owner cancel auction
     let env = mock_env();
-    let info = mock_info("satoshi", &[]);
+    let info =message_info(&Addr::unchecked("satoshi"), &[]);
     let cancel_msg = ExecuteMsg::CancelAuction {
         auction_id: Uint128::zero(),
     };
@@ -1029,7 +1084,7 @@ fn check_freeze_and_cancel_auction() {
         &send_nft_msg.msg,
         &CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: "nft".into(),
-            msg: to_json_binary(&Cw721ExecuteMsg::TransferNft {
+            msg: to_json_binary(&AuctionCw721ExecuteMsg::TransferNft {
                 token_id: "bitcoin".to_string(),
                 recipient: "satoshi".into()
             })
@@ -1055,7 +1110,7 @@ fn check_freeze_and_cancel_auction() {
 
     // unfreeze
     let env = mock_env();
-    let info = mock_info("owner", &[]);
+    let info = message_info(&Addr::unchecked("owner"), &[]);
     let unfreeze_msg = ExecuteMsg::AdminResume {};
     execute(deps.as_mut(), env, info, unfreeze_msg).unwrap();
 
@@ -1069,7 +1124,7 @@ fn check_freeze_and_cancel_auction() {
     );
     // place bid again
     let env = mock_env();
-    let info = mock_info("buyer", &[Coin::new(1_000000, "uluna")]);
+    let info = message_info(&Addr::unchecked("buyer"), &[Coin::new(1_000000u128, "uluna")]);
     let place_bid_msg = ExecuteMsg::PlaceBid {
         auction_id: Uint128::from(1u128),
     };
@@ -1083,7 +1138,7 @@ fn admin_cancel() {
 
     // receive nft
     let env = mock_env();
-    let info = mock_info("nft", &[]);
+    let info = message_info(&Addr::unchecked("nft"), &[]);
     let nft_receive_msg = Cw721ReceiveMsg {
         sender: "satoshi".into(),
         token_id: "bitcoin".to_string(),
@@ -1099,7 +1154,7 @@ fn admin_cancel() {
     execute(deps.as_mut(), env, info, create_buynow_msg).unwrap();
     // random admin cancel
     let env = mock_env();
-    let info = mock_info("satoshi", &[]);
+    let info =message_info(&Addr::unchecked("satoshi"), &[]);
     let admin_cancel_msg = ExecuteMsg::AdminCancelAuction {
         auction_id: Uint128::zero(),
     };
@@ -1110,7 +1165,7 @@ fn admin_cancel() {
     }
     // admin cancel
     let env = mock_env();
-    let info = mock_info("owner", &[]);
+    let info = message_info(&Addr::unchecked("owner"), &[]);
     let admin_cancel_msg = ExecuteMsg::AdminCancelAuction {
         auction_id: Uint128::zero(),
     };
@@ -1121,7 +1176,7 @@ fn admin_cancel() {
         &send_nft_msg.msg,
         &CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: "nft".into(),
-            msg: to_json_binary(&Cw721ExecuteMsg::TransferNft {
+            msg: to_json_binary(&AuctionCw721ExecuteMsg::TransferNft {
                 token_id: "bitcoin".to_string(),
                 recipient: "satoshi".into()
             })
@@ -1131,7 +1186,7 @@ fn admin_cancel() {
     );
     // create another auction
     let env = mock_env();
-    let info = mock_info("nft", &[]);
+    let info = message_info(&Addr::unchecked("nft"), &[]);
     let nft_receive_msg = Cw721ReceiveMsg {
         sender: "satoshi".into(),
         token_id: "bitcoin".to_string(),
@@ -1147,14 +1202,14 @@ fn admin_cancel() {
     execute(deps.as_mut(), env, info, create_auction_msg).unwrap();
     // place bid
     let env = mock_env();
-    let info = mock_info("buyer", &[Coin::new(1_000000, "uluna")]);
+    let info = message_info(&Addr::unchecked("buyer"), &[Coin::new(1_000000u128, "uluna")]);
     let place_bid_msg = ExecuteMsg::PlaceBid {
         auction_id: Uint128::from(1u128),
     };
     execute(deps.as_mut(), env, info, place_bid_msg).unwrap();
     // owner cancel
     let env = mock_env();
-    let info = mock_info("satoshi", &[]);
+    let info =message_info(&Addr::unchecked("satoshi"), &[]);
     let cancel_msg = ExecuteMsg::CancelAuction {
         auction_id: Uint128::from(1u128),
     };
@@ -1165,7 +1220,7 @@ fn admin_cancel() {
     }
     // admin cancel
     let env = mock_env();
-    let info = mock_info("owner", &[]);
+    let info = message_info(&Addr::unchecked("owner"), &[]);
     let admin_cancel_msg = ExecuteMsg::AdminCancelAuction {
         auction_id: Uint128::from(1u128),
     };
@@ -1177,7 +1232,7 @@ fn admin_cancel() {
         &send_fund_bidder_msg.msg,
         &CosmosMsg::Bank(BankMsg::Send {
             to_address: "buyer".into(),
-            amount: vec![Coin::new(1000000, "uluna")]
+            amount: vec![Coin::new(1000000u128, "uluna")]
         })
     );
 
@@ -1186,7 +1241,7 @@ fn admin_cancel() {
         &send_nft_msg.msg,
         &CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: "nft".into(),
-            msg: to_json_binary(&Cw721ExecuteMsg::TransferNft {
+            msg: to_json_binary(&AuctionCw721ExecuteMsg::TransferNft {
                 token_id: "bitcoin".to_string(),
                 recipient: "satoshi".into()
             })
@@ -1207,7 +1262,7 @@ fn set_royalty() {
         royalty_fee: Decimal::from_str("0.05").unwrap(),
     };
     // random guy set royalty
-    let info = mock_info("random", &[]);
+    let info = message_info(&Addr::unchecked("random"), &[]);
     let env = mock_env();
     let err = execute(deps.as_mut(), env, info, set_royalty_msg.clone()).unwrap_err();
     match err {
@@ -1215,7 +1270,7 @@ fn set_royalty() {
         e => panic!("unexcted error: {}", e),
     }
     // owner set royalty
-    let info = mock_info("owner", &[]);
+    let info = message_info(&Addr::unchecked("owner"), &[]);
     let env = mock_env();
     let err = execute(deps.as_mut(), env, info, set_royalty_msg.clone()).unwrap_err();
     match err {
@@ -1227,7 +1282,7 @@ fn set_royalty() {
         address: "admin1".to_string(),
         enable: true,
     };
-    let info = mock_info("owner", &[]);
+    let info = message_info(&Addr::unchecked("owner"), &[]);
     let env = mock_env();
     execute(deps.as_mut(), env, info, set_royalty_admin_msg.clone()).unwrap();
     // query royalty admin
@@ -1240,7 +1295,7 @@ fn set_royalty() {
         }
     );
     // set royalty
-    let info = mock_info("admin1", &[]);
+    let info = message_info(&Addr::unchecked("admin1"), &[]);
     let env = mock_env();
     execute(deps.as_mut(), env, info, set_royalty_msg.clone()).unwrap();
     let royalty = query_royalty_fee(deps.as_ref(), "nft".to_string()).unwrap();
@@ -1277,7 +1332,7 @@ fn set_royalty() {
         creator: "creator".to_string(),
         royalty_fee: Decimal::from_str("0.1").unwrap(),
     };
-    let info = mock_info("admin1", &[]);
+    let info = message_info(&Addr::unchecked("admin1"), &[]);
     let env = mock_env();
     execute(deps.as_mut(), env, info, set_royalty_msg.clone()).unwrap();
     // list all royalty
@@ -1304,7 +1359,7 @@ fn set_royalty() {
         address: "admin1".to_string(),
         enable: false,
     };
-    let info = mock_info("owner", &[]);
+    let info = message_info(&Addr::unchecked("owner"), &[]);
     let env = mock_env();
     execute(deps.as_mut(), env, info, set_royalty_admin_msg.clone()).unwrap();
     // query royalty admin
@@ -1321,7 +1376,7 @@ fn set_royalty() {
         creator: "creator".to_string(),
         royalty_fee: Decimal::from_str("0.1").unwrap(),
     };
-    let info = mock_info("admin1", &[]);
+    let info = message_info(&Addr::unchecked("admin1"), &[]);
     let env = mock_env();
     let err = execute(deps.as_mut(), env, info, set_royalty_msg.clone()).unwrap_err();
     match err {
@@ -1339,7 +1394,7 @@ fn query_multiple_royalties() {
         address: "admin".to_string(),
         enable: true,
     };
-    let info = mock_info("owner", &[]);
+    let info = message_info(&Addr::unchecked("owner"), &[]);
     let env = mock_env();
     execute(deps.as_mut(), env, info, set_royalty_admin_msg.clone()).unwrap();
 
@@ -1352,7 +1407,7 @@ fn query_multiple_royalties() {
             creator: "creator".to_string(),
             royalty_fee: Decimal::percent(i),
         };
-        let info = mock_info("admin", &[]);
+        let info = message_info(&Addr::unchecked("admin"), &[]);
         let env = mock_env();
         execute(deps.as_mut(), env, info, set_royalty_msg.clone()).unwrap();
         i += 1;

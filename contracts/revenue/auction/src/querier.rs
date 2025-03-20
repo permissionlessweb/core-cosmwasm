@@ -1,20 +1,25 @@
 use cosmwasm_std::{
-    to_json_binary, Addr, Deps, Order, QueryRequest, StdResult, Uint128, WasmQuery,
+    to_json_binary, Addr, Deps, Fraction, Order, QueryRequest, StdError, StdResult, Uint128,
+    WasmQuery,
 };
-use cw721::msg::{Cw721QueryMsg, OwnerOfResponse};
+use cw721::msg::{ OwnerOfResponse};
 use cw_storage_plus::Bound;
 use cw_utils::maybe_addr;
 use terp_marketplace_utils::auction::{
     AllRoyaltyFeeResponse, AllRoyaltyListResponse, AuctionListResponse, AuctionResponse,
-    AuctionResponse as NftAuctionResponse, Bid, BidsCountResponse, BidHistoryByAuctionIdResponse,
+    AuctionResponse as NftAuctionResponse, Bid, BidHistoryByAuctionIdResponse, BidsCountResponse,
     CalculatePriceResponse, ConfigResponse, Royalty, RoyaltyAdminResponse, RoyaltyFeeResponse,
     RoyaltyResponse, StateResponse,
 };
 
-use crate::state::{
-    Auction, AUCTIONS, AUCTION_ID_BY_AMOUNT, AUCTION_ID_BY_BIDDER, AUCTION_ID_BY_ENDTIME,
-    AUCTION_ID_BY_SELLER, BID_COUNT_BY_AUCTION_ID, BID_HISTORY_BY_AUCTION_ID, CONFIG,
-    NFT_AUCTION_MAPS, NOT_STARTED_AUCTION, ROYALTIES, ROYALTY_ADMINS, STATE,
+use crate::{
+    contract::AuctionCw721QueryMsg,
+    state::{
+        Auction, AUCTIONS, AUCTION_ID_BY_AMOUNT, AUCTION_ID_BY_BIDDER, AUCTION_ID_BY_ENDTIME,
+        AUCTION_ID_BY_SELLER, BID_COUNT_BY_AUCTION_ID, BID_HISTORY_BY_AUCTION_ID, CONFIG,
+        NFT_AUCTION_MAPS, NOT_STARTED_AUCTION, ROYALTIES, ROYALTY_ADMINS, STATE,
+    },
+    ContractError,
 };
 
 const DEFAULT_LIMIT: u32 = 10;
@@ -47,7 +52,7 @@ pub fn query_nft_owner(deps: Deps, nft_contract: String, token_id: String) -> St
     let owner_response: OwnerOfResponse =
         deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
             contract_addr: nft_contract,
-            msg: to_json_binary(&Cw721QueryMsg::OwnerOf {
+            msg: to_json_binary(&AuctionCw721QueryMsg::OwnerOf {
                 token_id,
                 include_expired: None,
             })?,
@@ -271,10 +276,26 @@ pub fn query_calculate_price(
     let nft_contract_addr = deps.api.addr_validate(&nft_contract)?;
     let royalty = ROYALTIES.may_load(deps.storage, &nft_contract_addr)?;
     let royalty_amount = match royalty {
-        Some(royal) => royal.royalty_fee * amount,
-        None => Uint128::zero(),
-    };
-    let protocol_amount = config.protocol_fee * amount;
+        Some(royal) => amount
+            .checked_multiply_ratio(
+                royal.royalty_fee.numerator(),
+                royal.royalty_fee.denominator(),
+            )
+            .map_err(|e| {
+                ContractError::Std(StdError::generic_err(
+                    ContractError::CheckedMultiplyRatioError(e).to_string(),
+                ))
+            }),
+        None => Ok(Uint128::zero()),
+    }
+    .expect("should never happen :-)");
+    let protocol_amount = amount
+        .checked_multiply_ratio(
+            config.protocol_fee.numerator(),
+            config.protocol_fee.denominator(),
+        )
+        .expect("ahhhh");
+
     let seller_amount = amount - (protocol_amount + royalty_amount);
     Ok(CalculatePriceResponse {
         nft_contract,
@@ -334,10 +355,7 @@ pub fn query_royalty_admin(deps: Deps, address: String) -> StdResult<RoyaltyAdmi
 
     let enable = admin.unwrap_or(false);
 
-    Ok(RoyaltyAdminResponse {
-        address,
-        enable,
-    })
+    Ok(RoyaltyAdminResponse { address, enable })
 }
 
 pub fn construct_action_response(

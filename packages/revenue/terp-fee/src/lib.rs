@@ -2,7 +2,7 @@ use cosmwasm_std::{
     coin, coins, Addr, BankMsg, Coin, Decimal, Event, MessageInfo, Response, SubMsg, Uint128,
 };
 use cw_utils::{may_pay, PaymentError};
-use terp_sdk::{create_fund_community_pool_msg_default, NATIVE_DENOM};
+use terp_sdk::NATIVE_DENOM;
 use thiserror::Error;
 
 // governance parameters
@@ -95,12 +95,9 @@ pub fn fair_burn(fee: u128, developer: Option<Addr>, res: &mut Response) {
         event = event.add_attribute("dev", dev.to_string());
         event = event.add_attribute("dev_amount", Uint128::from(remainder).to_string());
     } else {
-        res.messages
-            .push(SubMsg::new(create_fund_community_pool_msg_default(coins(
-                remainder,
-                NATIVE_DENOM,
-            ))));
-        event = event.add_attribute("dist_amount", Uint128::from(remainder).to_string());
+        res.messages.push(SubMsg::new(BankMsg::Burn {
+            amount: coins(remainder, NATIVE_DENOM),
+        }));
     }
 
     res.events.push(event);
@@ -117,8 +114,8 @@ pub enum FeeError {
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{coins, Addr, BankMsg};
-    use terp_sdk::{create_fund_community_pool_msg, Response, NATIVE_DENOM};
+    use cosmwasm_std::{coins, Addr, BankMsg, Response};
+    use terp_sdk::{ NATIVE_DENOM};
 
     use crate::{fair_burn, SubMsg};
 
@@ -130,11 +127,9 @@ mod tests {
         let burn_msg = SubMsg::new(BankMsg::Burn {
             amount: coins(4, "uthiol".to_string()),
         });
-        let dist_msg = SubMsg::new(create_fund_community_pool_msg(coins(5, NATIVE_DENOM)));
-        assert_eq!(res.messages.len(), 2);
+        assert_eq!(res.messages.len(), 1);
         assert_eq!(res.messages[0], burn_msg);
-        assert_eq!(res.messages[1], dist_msg);
-    }
+       }
 
     #[test]
     fn check_fair_burn_with_dev_rewards() {

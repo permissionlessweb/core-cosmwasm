@@ -1,10 +1,10 @@
 use cosmwasm_std::{
-    to_json_binary, Addr, CosmosMsg, Decimal, Deps, DepsMut, Env, MessageInfo,
-     Response,  Uint128, WasmMsg, 
+    coin, to_json_binary, Addr, BankMsg, CosmosMsg, Decimal, Deps, DepsMut, Env, Fraction,
+    MessageInfo, Response, Uint128, WasmMsg,
 };
-use cw721::msg::Cw721ExecuteMsg;
 use terp_marketplace_utils::auction::{AuctionType, Bid, ExecuteMsg, Royalty};
 
+use crate::contract::AuctionCw721ExecuteMsg;
 use crate::error::ContractError;
 use crate::querier::query_nft_owner;
 use crate::state::{
@@ -416,14 +416,10 @@ pub fn place_bid(
                     &true,
                 )?;
 
-                let refund_asset: Asset = Asset {
-                    info: AssetInfo::NativeToken {
-                        denom: auction.denom.clone(),
-                    },
-                    amount: last_amount,
-                };
-
-                let refund_msg = refund_asset.into_msg(last_bidder)?;
+                let refund_msg = CosmosMsg::Bank(BankMsg::Send {
+                    to_address: last_bidder.to_string(),
+                    amount: vec![coin(last_amount.into(), auction.denom.clone())],
+                });
                 messages.push(refund_msg);
             }
         }
@@ -471,25 +467,19 @@ pub fn settle_auction(
     let seller_amount = auction.amount - (protocol_fee + royalty_fee);
     // protocol fee
     if protocol_fee > Uint128::zero() {
-        let protocol_asset = Asset {
-            info: AssetInfo::NativeToken {
-                denom: auction.denom.clone(),
-            },
-            amount: protocol_fee,
-        };
-        messages.push(protocol_asset.into_msg(config.protocol_addr.clone())?);
+        messages.push(CosmosMsg::Bank(BankMsg::Send {
+            to_address: config.protocol_addr.to_string(),
+            amount: vec![coin(protocol_fee.u128(), auction.denom.clone())],
+        }));
     }
     // royalty
     if royalty_fee > Uint128::zero() {
-        let royalty_asset = Asset {
-            info: AssetInfo::NativeToken {
-                denom: auction.denom.clone(),
-            },
-            amount: royalty_fee,
-        };
         match auction.creator_address.clone() {
-            Some(v) => {
-                messages.push(royalty_asset.into_msg(v)?);
+            Some(creator) => {
+                messages.push(CosmosMsg::Bank(BankMsg::Send {
+                    to_address: creator.to_string(),
+                    amount: vec![coin(royalty_fee.u128(), auction.denom.clone())],
+                }));
             }
             None => {
                 return Err(ContractError::InvalidAuction(
@@ -499,13 +489,11 @@ pub fn settle_auction(
         };
     }
     // seller
-    let seller_asset = Asset {
-        info: AssetInfo::NativeToken {
-            denom: auction.denom.clone(),
-        },
-        amount: seller_amount,
-    };
-    messages.push(seller_asset.into_msg(auction.seller.clone())?);
+    // seller
+    messages.push(CosmosMsg::Bank(BankMsg::Send {
+        to_address: auction.seller.to_string(),
+        amount: vec![coin(seller_amount.u128(), auction.denom.clone())],
+    }));
     // send nft to bidder
     let bidder = match &auction.bidder {
         Some(v) => v.clone(),
@@ -513,7 +501,7 @@ pub fn settle_auction(
     };
     messages.push(CosmosMsg::Wasm(WasmMsg::Execute {
         contract_addr: auction.nft_contract.to_string(),
-        msg: to_json_binary(&Cw721ExecuteMsg::TransferNft {
+        msg: to_json_binary(&AuctionCw721ExecuteMsg::TransferNft {
             token_id: auction.token_id.clone(),
             recipient: bidder.to_string(),
         })?,
@@ -685,7 +673,7 @@ fn _cancel_auction(
     // return nft back to seller
     messages.push(CosmosMsg::Wasm(WasmMsg::Execute {
         contract_addr: auction.nft_contract.to_string(),
-        msg: to_json_binary(&Cw721ExecuteMsg::TransferNft {
+        msg: to_json_binary(&AuctionCw721ExecuteMsg::TransferNft {
             token_id: auction.token_id.clone(),
             recipient: auction.seller.to_string(),
         })?,
@@ -754,11 +742,11 @@ pub fn calculate_min_bid_amount(
     amount: Uint128,
 ) -> Result<Uint128, ContractError> {
     let multiplier: Decimal = Decimal::one() + min_increment;
-    let min_bid_amount = amount * multiplier;
+    let min_bid_amount =
+        amount.checked_multiply_ratio(multiplier.numerator(), multiplier.denominator())?;
     Ok(min_bid_amount)
 }
 
 pub fn calculate_fee(multiplier: Decimal, amount: Uint128) -> Result<Uint128, ContractError> {
-    let fee = amount * multiplier;
-    Ok(fee)
+    Ok(amount.checked_multiply_ratio(multiplier.numerator(), multiplier.denominator())?)
 }

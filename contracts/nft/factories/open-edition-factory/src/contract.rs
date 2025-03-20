@@ -1,10 +1,10 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    ensure, to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, StdResult, WasmMsg,
+    ensure, to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, WasmMsg
 };
 use cw2::set_contract_version;
-use terp_sdk::{Response, NATIVE_DENOM};
+use terp_sdk::{ NATIVE_DENOM};
 
 use base_factory::contract::{
     must_be_allowed_collection, must_not_be_frozen, must_pay_exact_amount, update_params,

@@ -1,11 +1,11 @@
 use cosmwasm_std::{
     ensure, to_json_binary, Addr, BankMsg, Binary, Coin, Deps, DepsMut, Empty, Env, Event,
-    MessageInfo, StdResult,
+    MessageInfo, Response, StdResult,
 };
 use cw2::{get_contract_version, set_contract_version};
 use cw_utils::{maybe_addr, NativeBalance};
 use std::collections::BTreeMap;
-use terp_sdk::{create_fund_community_pool_msg, Response, NATIVE_DENOM};
+use terp_sdk::{create_fund_community_pool_msg, NATIVE_DENOM};
 
 use crate::{
     error::ContractError,
@@ -197,11 +197,10 @@ mod tests {
         coin, coins, to_json_binary, Addr, Coin, Decimal, Event, StdResult, Uint128, WasmMsg,
     };
     use cw_multi_test::{
-        App, AppResponse, BankSudo, Contract, ContractWrapper, Executor, SudoMsg as CwSudoMsg,
-        WasmSudo,
+        App, AppResponse, BankSudo, ContractWrapper, Executor, SudoMsg as CwSudoMsg, WasmSudo,
     };
 
-    use terp_sdk::{TerpMsgWrapper, NATIVE_DENOM};
+    use terp_sdk::NATIVE_DENOM;
 
     const INITIAL_BALANCE: u128 = 5_000_000_000;
 
@@ -232,7 +231,11 @@ mod tests {
     #[test]
     fn try_instantiate() {
         let mut app = App::default();
-        let fair_burn_id = app.store_code(contract());
+        let fair_burn_id = app.store_code(Box::new(ContractWrapper::new(
+            super::execute,
+            super::instantiate,
+            super::query,
+        )));
 
         let creator = Addr::unchecked("creator");
 
@@ -253,8 +256,12 @@ mod tests {
     #[test]
     fn try_sudo_update() {
         let mut app = App::default();
-        let fair_burn_id = app.store_code(contract());
 
+        let fair_burn_id = app.store_code(Box::new(ContractWrapper::new(
+            super::execute,
+            super::instantiate,
+            super::query,
+        )));
         let creator = Addr::unchecked("creator");
 
         let fee_bps = 5000;
@@ -297,7 +304,11 @@ mod tests {
     #[test]
     fn try_execute_fair_burn() {
         let mut app = App::default();
-        let fair_burn_id = app.store_code(contract());
+        let fair_burn_id = app.store_code(Box::new(ContractWrapper::new(
+            super::execute,
+            super::instantiate,
+            super::query,
+        )));
 
         let creator = Addr::unchecked("creator");
 

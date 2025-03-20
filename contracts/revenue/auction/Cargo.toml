@@ -36,6 +36,7 @@ cw-utils = { workspace = true }
 cw721 = { workspace = true }
 cw2981-royalties = { version = "0.18.0"}
 cw20 = { workspace = true }
+cw-asset = { workspace = true }
 cw-storage-plus = { workspace = true }
 terp-marketplace-utils = { workspace = true }
 thiserror =  { workspace = true }

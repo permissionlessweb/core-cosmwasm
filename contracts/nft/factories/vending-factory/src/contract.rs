@@ -3,13 +3,15 @@ use base_factory::ContractError as BaseContractError;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    ensure, ensure_eq, to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, StdResult, WasmMsg,
+    ensure, ensure_eq, to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, WasmMsg
 };
 use cw2::set_contract_version;
 use cw_utils::must_pay;
+use factory_utils::query::{
+    AllowedCollectionCodeIdResponse, AllowedCollectionCodeIdsResponse, FactoryUtilsQueryMsg,
+};
 use terp_fee::checked_fair_burn;
-use factory_utils::query::{AllowedCollectionCodeIdResponse, AllowedCollectionCodeIdsResponse, FactoryUtilsQueryMsg};
-use terp_sdk::{Response, NATIVE_DENOM};
+use terp_sdk::NATIVE_DENOM;
 
 use crate::error::ContractError;
 use crate::msg::{

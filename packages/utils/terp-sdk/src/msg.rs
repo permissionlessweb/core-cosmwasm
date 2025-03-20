@@ -46,22 +46,6 @@ pub enum TerpMsg {
 //     .into()
 // }
 
-pub fn create_fund_community_pool_msg(amount: Vec<Coin>) -> CosmosMsg<TerpMsgWrapper> {
-    TerpMsgWrapper {
-        route: TerpRoute::Distribution,
-        msg_data: TerpMsg::FundCommunityPool { amount },
-        version: MSG_DATA_VERSION.to_owned(),
-    }
-    .into()
-}
-pub fn create_fund_community_pool_msg_default(amount: Vec<Coin>) -> CosmosMsg {
-    TerpMsgWrapper {
-        route: TerpRoute::Distribution,
-        msg_data: TerpMsg::FundCommunityPool { amount },
-        version: MSG_DATA_VERSION.to_owned(),
-    }
-    .into()
-}
 
 // pub fn create_fund_fairburn_pool_msg(amount: Vec<Coin>) -> CosmosMsg<TerpMsgWrapper> {
 //     TerpMsgWrapper {

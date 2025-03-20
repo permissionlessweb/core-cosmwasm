@@ -7,6 +7,7 @@
 - add agreement based contracts
 This repository contains the core contracts and libraries that are shared among all Terp Network protocols.
 - replcae asset type used in market (removed terr import)
+- factory utils query response to use cw721 v19 collection info metadata
 
 
 | NFT Contracts                                                     | Description                                                                                      |

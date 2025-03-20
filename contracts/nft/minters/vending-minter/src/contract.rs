@@ -4,34 +4,34 @@ use crate::msg::{
     QueryMsg, StartTimeResponse,
 };
 use crate::state::{
-    Config, ConfigExtension, CONFIG, MINTABLE_NUM_TOKENS, MINTABLE_TOKEN_POSITIONS, MINTER_ADDRS,
-    cw721_ADDRESS, STATUS,
+    cw721_ADDRESS, Config, ConfigExtension, CONFIG, MINTABLE_NUM_TOKENS, MINTABLE_TOKEN_POSITIONS,
+    MINTER_ADDRS, STATUS,
 };
 use crate::validation::{check_dynamic_per_address_limit, get_three_percent_of_tokens};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    coin, ensure, to_json_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Decimal, Deps, DepsMut, Empty,
-    Env, Event, MessageInfo, Order, Reply, ReplyOn, StdError, StdResult, Timestamp, Uint128,
-    WasmMsg,
+    coin, ensure, to_json_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Decimal, Deps, DepsMut,
+    Empty, Env, Event, Fraction, MessageInfo, Order, Reply, ReplyOn, StdError, StdResult,
+    Timestamp, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
+use cw721_base::msg::{ExecuteMsg as cw721ExecuteMsg, InstantiateMsg as Sg721InstantiateMsg};
 use cw721_base::Extension;
-use cw_utils::{may_pay, maybe_addr, nonpayable, parse_reply_instantiate_data};
-use rand_core::{RngCore, SeedableRng};
-use rand_xoshiro::Xoshiro128PlusPlus;
-use semver::Version;
-use terp_fee::{checked_fair_burn, ibc_denom_fair_burn};
-use factory_utils::query::FactoryUtilsQueryMsg;
-use minter_utils::{MinterConfig, Status, StatusResponse, SudoMsg};
-use cw721::{ExecuteMsg as cw721ExecuteMsg, InstantiateMsg as Sg721InstantiateMsg};
-use terp_sdk::{TerpMsgWrapper, GENESIS_MINT_START_TIME, NATIVE_DENOM};
+use cw_utils::{may_pay, maybe_addr, nonpayable};
 use earlybird::msg::{
     ConfigResponse as EarlybirdConfigResponse, HasMemberResponse, QueryMsg as EarlybirdQueryMsg,
 };
+use factory_utils::query::FactoryUtilsQueryMsg;
+use minter_utils::{MinterConfig, Status, StatusResponse, SudoMsg};
+use rand_core::{RngCore, SeedableRng};
+use rand_xoshiro::Xoshiro128PlusPlus;
+use semver::Version;
 use sha2::{Digest, Sha256};
 use shuffle::{fy::FisherYates, shuffler::Shuffler};
 use std::convert::TryInto;
+use terp_fee::{checked_fair_burn, ibc_denom_fair_burn};
+use terp_sdk::{GENESIS_MINT_START_TIME, NATIVE_DENOM};
 use url::Url;
 use vending_factory::msg::{ParamsResponse, VendingMinterCreateMsg};
 use vending_factory::state::VendingMinterParams;
@@ -647,7 +647,9 @@ fn _execute_mint(
         Decimal::bps(factory_params.mint_fee_bps)
     };
 
-    let network_fee = mint_price.amount * mint_fee;
+    let network_fee = mint_price
+        .amount
+        .checked_multiply_ratio(mint_fee.numerator(), mint_fee.denominator())?;
 
     // send non-native fees to community pool
     if mint_price.denom != NATIVE_DENOM {
@@ -685,7 +687,7 @@ fn _execute_mint(
     };
 
     // Create mint msgs
-    let mint_msg = cw721ExecuteMsg::<Extension, Empty>::Mint {
+    let mint_msg = cw721ExecuteMsg::Mint {
         token_id: mintable_token_mapping.token_id.to_string(),
         owner: recipient_addr.to_string(),
         token_uri: Some(format!(
@@ -929,9 +931,7 @@ pub fn execute_update_start_trading_time(
     // execute cw721 contract
     let msg = WasmMsg::Execute {
         contract_addr: cw721_contract_addr.to_string(),
-        msg: to_json_binary(&cw721ExecuteMsg::<Empty, Empty>::UpdateStartTradingTime(
-            start_time,
-        ))?,
+        msg: to_json_binary(&cw721ExecuteMsg::UpdateStartTradingTime(start_time))?,
         funds: vec![],
     };
 

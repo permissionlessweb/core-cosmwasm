@@ -1,10 +1,17 @@
-use cosmwasm_std::StdError;
+use cosmwasm_std::{CheckedMultiplyRatioError, StdError};
+use cw_asset::AssetError;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum ContractError {
     #[error("{0}")]
     Std(#[from] StdError),
+
+    #[error("{0}")]
+    AssetError(#[from] AssetError),
+
+    #[error("{0}")]
+    CheckedMultiplyRatioError(#[from] CheckedMultiplyRatioError),
 
     #[error("Unauthorized")]
     Unauthorized {},
