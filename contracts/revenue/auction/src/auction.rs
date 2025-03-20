@@ -4,7 +4,6 @@ use cosmwasm_std::{
 };
 use cw721::Cw721ExecuteMsg;
 use terp_marketplace_utils::auction::{AuctionType, Bid, ExecuteMsg, Royalty};
-use terraswap::asset::{Asset, AssetInfo};
 
 use crate::error::ContractError;
 use crate::querier::query_nft_owner;
@@ -423,7 +422,9 @@ pub fn place_bid(
                     },
                     amount: last_amount,
                 };
-                messages.push(refund_asset.into_msg(last_bidder)?);
+
+                let refund_msg = refund_asset.into_msg(last_bidder)?;
+                messages.push(refund_msg);
             }
         }
     }

@@ -203,7 +203,7 @@ where
         }
 
         // only creator can update collection info
-        if collection.creator != info.sender {
+        if collection.creator != info.sender.to_string() {
             return Err(ContractError::Unauthorized {});
         }
 
@@ -297,7 +297,7 @@ where
         info: MessageInfo,
     ) -> Result<Response, ContractError> {
         let collection = self.query_collection_info(deps.as_ref())?;
-        if collection.creator != info.sender {
+        if collection.creator != info.sender.to_string() {
             return Err(ContractError::Unauthorized {});
         }
 

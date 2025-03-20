@@ -14,7 +14,7 @@ First, add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-terp-index-query = "0.1.0"
+terp-index-query = "0.2.0"
 ```
 
 Then, you can use the `QueryOptions` struct in your code:

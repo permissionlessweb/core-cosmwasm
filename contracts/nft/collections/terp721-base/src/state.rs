@@ -2,20 +2,20 @@ use cosmwasm_std::{Empty, Timestamp};
 use cw_storage_plus::Item;
 use serde::{de::DeserializeOwned, Serialize};
 use terp721::{CollectionInfo, ResidualInfo};
-use terp_sdk::TerpMsgWrapper;
+// use terp_sdk::TerpMsgWrapper;
 use std::ops::Deref;
 
-type Parent<'a, T> = cw721_base::Cw721Contract<'a, T, TerpMsgWrapper, Empty, Empty>;
+type Parent<'a, T> = cw721_base::Cw721Contract<'a, T, Empty, Empty, Empty>;
 pub struct Terp721Contract<'a, T>
 where
     T: Serialize + DeserializeOwned + Clone,
 {
     pub parent: Parent<'a, T>,
-    pub collection_info: Item<'a, CollectionInfo<ResidualInfo>>,
+    pub collection_info: Item< CollectionInfo<ResidualInfo>>,
 
     /// Instantiate set to false by the minter, then true by creator to freeze collection info
-    pub frozen_collection_info: Item<'a, bool>,
-    pub royalty_updated_at: Item<'a, Timestamp>,
+    pub frozen_collection_info: Item< bool>,
+    pub royalty_updated_at: Item< Timestamp>,
 }
 
 impl<'a, T> Default for Terp721Contract<'a, T>

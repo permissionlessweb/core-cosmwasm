@@ -92,7 +92,7 @@ impl WasmMockQuerier {
     // configure the token owner mock querier
     pub fn with_balance(&mut self, balances: &[(String, &[Coin])]) {
         for (addr, balance) in balances {
-            self.base.update_balance(addr, balance.to_vec());
+            self.with_balance(&[(addr.to_string(), balance)]);
         }
     }
 

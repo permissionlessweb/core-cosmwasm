@@ -75,7 +75,7 @@ pub fn fair_burn(fee: u128, developer: Option<Addr>, res: &mut Response) {
     let mut event = Event::new("fair-burn");
 
     // calculate the fair burn fee
-    let burn_fee = (Uint128::from(fee) * Decimal::percent(FEE_BURN_PERCENT)).u128();
+    let burn_fee = (Decimal::from_atomics(atomics, decimal_places) * Decimal::percent(FEE_BURN_PERCENT)).;
     let burn_coin = coins(burn_fee, NATIVE_DENOM);
     res.messages
         .push(SubMsg::new(BankMsg::Burn { amount: burn_coin }));

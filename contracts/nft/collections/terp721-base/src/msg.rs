@@ -1,5 +1,6 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_schema::QueryResponses;
+use cosmwasm_std::Decimal;
 use cosmwasm_std::{
     coin, Addr, BankMsg, Binary, Empty, Event, StdError, StdResult, Timestamp, Uint128,
 };
@@ -211,7 +212,7 @@ impl CollectionInfoResponse {
             if residual_info.share.is_zero() {
                 return Ok(Uint128::zero());
             }
-            let royalty = coin((payment * residual_info.share).u128(), NATIVE_DENOM);
+            let royalty = coin(Uint128::n (Decimal::from_atomics(payment, 12).expect("error on royality") * residual_info.share).u128(), NATIVE_DENOM);
             if payment < (protocol_fee + finders_fee.unwrap_or(Uint128::zero()) + royalty.amount) {
                 return Err(StdError::generic_err("Fees exceed payment"));
             }
