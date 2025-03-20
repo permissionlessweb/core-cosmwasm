@@ -1,6 +1,6 @@
 use crate::route::TerpRoute;
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Coin, CosmosMsg, CustomMsg};
+use cosmwasm_std::{Coin, CosmosMsg};
 static MSG_DATA_VERSION: &str = "1.0.0";
 
 /// TerpMsg is an override of CosmosMsg::Custom to add support for Terp's custom message types
@@ -17,17 +17,13 @@ impl From<TerpMsgWrapper> for CosmosMsg<TerpMsgWrapper> {
     }
 }
 
-impl CustomMsg for TerpMsgWrapper {}
-
 #[cw_serde]
 pub enum TerpMsg {
     // ClaimFor {
     //     address: String,
     //     action: ClaimAction,
     // },
-    FundCommunityPool {
-        amount: Vec<Coin>,
-    },
+    FundCommunityPool { amount: Vec<Coin> },
     // FundFairburnPool {
     //     amount: Vec<Coin>,
     // },
@@ -51,6 +47,14 @@ pub enum TerpMsg {
 // }
 
 pub fn create_fund_community_pool_msg(amount: Vec<Coin>) -> CosmosMsg<TerpMsgWrapper> {
+    TerpMsgWrapper {
+        route: TerpRoute::Distribution,
+        msg_data: TerpMsg::FundCommunityPool { amount },
+        version: MSG_DATA_VERSION.to_owned(),
+    }
+    .into()
+}
+pub fn create_fund_community_pool_msg_default(amount: Vec<Coin>) -> CosmosMsg {
     TerpMsgWrapper {
         route: TerpRoute::Distribution,
         msg_data: TerpMsg::FundCommunityPool { amount },

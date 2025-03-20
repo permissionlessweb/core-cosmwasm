@@ -19,7 +19,7 @@ pub enum ExecuteMsg {
     },
     UpdateStartTime(Timestamp),
     UpdateEndTime(Timestamp),
-    /// Runs custom checks against TradingStartTime on VendingMinter, then updates by calling terp721-base
+    /// Runs custom checks against TradingStartTime on VendingMinter, then updates by calling cw721-base
     UpdateStartTradingTime(Option<Timestamp>),
     UpdatePerAddressLimit {
         per_address_limit: u32,
@@ -47,8 +47,8 @@ pub struct ConfigResponse {
     pub payment_address: Option<Addr>,
     pub per_address_limit: u32,
     pub end_time: Timestamp,
-    pub terp721_address: String,
-    pub terp721_code_id: u64,
+    pub cw721_address: String,
+    pub cw721_code_id: u64,
     pub start_time: Timestamp,
     pub mint_price: Coin,
     pub factory: String,

@@ -1,21 +1,21 @@
 use assert_matches::assert_matches;
 use cosm_orc::orchestrator::error::CosmwasmError::TxError;
 use cosm_orc::orchestrator::error::ProcessError;
-use terp721::{CollectionInfo, InstantiateMsg};
+use cw721::{CollectionInfo, InstantiateMsg};
 use test_context::test_context;
 
-use crate::helpers::{chain::Chain, helper::TERP721_NAME};
+use crate::helpers::{chain::Chain, helper::cw721_NAME};
 
 #[test_context(Chain)]
 #[test]
 #[ignore]
-fn test_unauthorized_terp721_instantiation(chain: &mut Chain) {
+fn test_unauthorized_cw721_instantiation(chain: &mut Chain) {
     let user = chain.cfg.users[0].clone();
     let user_addr = &user.account.address;
 
     let res = chain.orc.instantiate(
-        TERP721_NAME,
-        "terp721_inst_err",
+        cw721_NAME,
+        "cw721_inst_err",
         &InstantiateMsg {
             name: "Collection Name".to_string(),
             symbol: "COL".to_string(),

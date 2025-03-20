@@ -148,7 +148,7 @@
         "description": "Common params for all minters used for storage",
         "type": "object",
         "required": [
-          "allowed_terp721_code_ids",
+          "allowed_cw721_code_ids",
           "code_id",
           "creation_fee",
           "frozen",
@@ -157,7 +157,7 @@
           "mint_fee_bps"
         ],
         "properties": {
-          "allowed_terp721_code_ids": {
+          "allowed_cw721_code_ids": {
             "type": "array",
             "items": {
               "type": "integer",

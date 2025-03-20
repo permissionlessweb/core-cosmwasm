@@ -8,7 +8,7 @@ use crate::common_setup::templates::{vending_minter_with_app, vending_minter_wit
 use cosmwasm_std::{coins, Addr, Timestamp};
 use cw_multi_test::Executor;
 use factory_utils::tests::mock_collection_params_1;
-use terp721_base::msg::{CollectionInfoResponse, QueryMsg as Terp721QueryMsg};
+use cw721_base::msg::{CollectionInfoResponse, QueryMsg as cw721QueryMsg};
 use terp_sdk::{GENESIS_MINT_START_TIME, NATIVE_DENOM};
 use vending_minter::msg::{ExecuteMsg, QueryMsg, StartTimeResponse};
 use vending_minter::ContractError;
@@ -281,7 +281,7 @@ fn update_start_trading_time() {
         .wrap()
         .query_wasm_smart(
             collection_addr.to_string(),
-            &Terp721QueryMsg::CollectionInfo {},
+            &cw721QueryMsg::CollectionInfo {},
         )
         .unwrap();
 

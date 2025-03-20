@@ -1,5 +1,5 @@
 use cw_multi_test::{Contract, ContractWrapper};
-use terp_multi_test::TerpApp;
+
 use terp_sdk::TerpMsgWrapper;
 
 pub fn custom_mock_app() -> TerpApp {
@@ -48,9 +48,9 @@ pub fn contract_base_minter() -> Box<dyn Contract<TerpMsgWrapper>> {
 
 pub fn contract_nt_collection() -> Box<dyn Contract<TerpMsgWrapper>> {
     let contract = ContractWrapper::new(
-        terp721_nt::entry::execute,
-        terp721_nt::entry::instantiate,
-        terp721_nt::entry::query,
+        cw721_nt::entry::execute,
+        cw721_nt::entry::instantiate,
+        cw721_nt::entry::query,
     );
     Box::new(contract)
 }
@@ -84,22 +84,22 @@ pub fn contract_vending_minter() -> Box<dyn Contract<TerpMsgWrapper>> {
     Box::new(contract)
 }
 
-pub fn contract_terp721_base() -> Box<dyn Contract<TerpMsgWrapper>> {
+pub fn contract_cw721_base() -> Box<dyn Contract<TerpMsgWrapper>> {
     let contract = ContractWrapper::new(
-        terp721_base::entry::execute,
-        terp721_base::entry::instantiate,
-        terp721_base::entry::query,
+        cw721_base::entry::execute,
+        cw721_base::entry::instantiate,
+        cw721_base::entry::query,
     );
     Box::new(contract)
 }
 
-pub fn contract_terp721_updatable() -> Box<dyn Contract<TerpMsgWrapper>> {
+pub fn contract_cw721_updatable() -> Box<dyn Contract<TerpMsgWrapper>> {
     let contract = ContractWrapper::new(
-        terp721_base::entry::execute,
-        terp721_base::entry::instantiate,
-        terp721_base::entry::query,
+        cw721_base::entry::execute,
+        cw721_base::entry::instantiate,
+        cw721_base::entry::query,
     )
-    .with_migrate(terp721_updatable::entry::migrate);
+    .with_migrate(cw721_updatable::entry::migrate);
     Box::new(contract)
 }
 

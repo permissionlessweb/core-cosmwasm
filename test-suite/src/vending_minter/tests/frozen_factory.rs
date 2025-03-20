@@ -37,8 +37,8 @@ fn frozen_factory_cannot_create_new_minters() {
         shuffle_fee: None,
     };
     let update_msg = VendingUpdateParamsMsg {
-        add_terp721_code_ids: None,
-        rm_terp721_code_ids: None,
+        add_cw721_code_ids: None,
+        rm_cw721_code_ids: None,
         frozen: Some(true),
         code_id: None,
         creation_fee: None,

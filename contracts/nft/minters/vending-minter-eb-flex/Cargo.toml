@@ -44,7 +44,6 @@ shuffle           = { git = "https://github.com/webmaster128/shuffle", branch = 
 terp-fee              = { workspace = true }
 factory-utils               = { workspace = true }
 minter-utils               = { workspace = true }
-terp721             = { workspace = true }
 terp-sdk            = { workspace = true }
 earlybird-flex = { workspace = true, features = ["library"] }
 thiserror         = { workspace = true }

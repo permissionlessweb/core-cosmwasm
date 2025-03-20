@@ -9,7 +9,7 @@ mod open_edition_factory;
 #[cfg(test)]
 mod open_edition_minter;
 #[cfg(test)]
-mod terp721_base;
+mod cw721_base;
 #[cfg(test)]
 mod headstash_airdrop;
 #[cfg(test)]

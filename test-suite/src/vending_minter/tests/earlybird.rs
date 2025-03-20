@@ -435,7 +435,7 @@ fn earlybird_access_len_add_remove_expiration() {
         code_ids,
     );
     let minter_addr = minter_collection_response[0].minter.clone().unwrap();
-    let terp721_addr = minter_collection_response[0].collection.clone().unwrap();
+    let cw721_addr = minter_collection_response[0].collection.clone().unwrap();
 
     let earlybird_addr = configure_collection_earlybird(
         &mut router,
@@ -526,7 +526,7 @@ fn earlybird_access_len_add_remove_expiration() {
     };
     let res = router.execute_contract(
         buyer.clone(),
-        Addr::unchecked(terp721_addr),
+        Addr::unchecked(cw721_addr),
         &transfer_msg,
         &coins_for_msg(coin(123, NATIVE_DENOM)),
     );

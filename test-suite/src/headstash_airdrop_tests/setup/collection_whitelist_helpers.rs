@@ -4,7 +4,7 @@ use crate::headstash_airdrop::constants::collection_constants::{MINT_PRICE, WHIT
 use crate::headstash_airdrop::setup::execute_msg::execute_contract_with_msg;
 use cosmwasm_std::{coins, Addr};
 use cw_multi_test::{BankSudo, Executor, SudoMsg};
-use terp_multi_test::TerpApp;
+
 
 extern crate earlybird_immutable;
 

@@ -1,7 +1,7 @@
 use cosmwasm_std::{
     to_json_binary, Addr, Deps, Order, QueryRequest, StdResult, Uint128, WasmQuery,
 };
-use cw721::{Cw721QueryMsg, OwnerOfResponse};
+use cw721::msg::{Cw721QueryMsg, OwnerOfResponse};
 use cw_storage_plus::Bound;
 use cw_utils::maybe_addr;
 use terp_marketplace_utils::auction::{

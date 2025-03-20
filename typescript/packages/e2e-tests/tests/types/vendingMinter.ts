@@ -9,7 +9,7 @@ export interface InstantiateMsg {
   params: MinterParamsForParamsExtension
 }
 export interface MinterParamsForParamsExtension {
-  allowed_terp721_code_ids: number[]
+  allowed_cw721_code_ids: number[]
   code_id: number
   creation_fee: Coin
   extension: ParamsExtension

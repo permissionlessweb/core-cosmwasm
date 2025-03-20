@@ -39,7 +39,7 @@ fn check_custom_create_minter_denom() {
     );
     let custom_minter_params = OpenEditionMinterParams {
         code_id: 1,
-        allowed_terp721_code_ids: vec![1, 3, 5, 6],
+        allowed_cw721_code_ids: vec![1, 3, 5, 6],
         frozen: false,
         creation_fee: coin(CREATION_FEE, NATIVE_DENOM),
         min_mint_price: init_msg.mint_price.clone(),
@@ -115,7 +115,7 @@ fn one_hundred_percent_burned_ibc_minter() {
 
     let custom_minter_params = OpenEditionMinterParams {
         code_id: 1,
-        allowed_terp721_code_ids: vec![1, 3, 5, 6],
+        allowed_cw721_code_ids: vec![1, 3, 5, 6],
         frozen: false,
         creation_fee: coin(CREATION_FEE, NATIVE_DENOM),
         min_mint_price: init_msg.mint_price.clone(),
@@ -196,7 +196,7 @@ fn zero_mint_fee() {
 
     let custom_minter_params = OpenEditionMinterParams {
         code_id: 1,
-        allowed_terp721_code_ids: vec![1, 3, 5, 6],
+        allowed_cw721_code_ids: vec![1, 3, 5, 6],
         frozen: false,
         creation_fee: coin(CREATION_FEE, NATIVE_DENOM),
         min_mint_price: init_msg.mint_price.clone(),

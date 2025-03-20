@@ -5,7 +5,7 @@ use crate::setup::setup_minter::standard_minter_template;
 
 use cosmwasm_std::{Addr, Decimal};
 use cw_multi_test::Executor;
-use terp_multi_test::TerpApp;
+
 use terp_sdk::GENESIS_MINT_START_TIME;
 use terp_residual_registry::state::{ResidualDefault, ResidualEntry, ResidualProtocol};
 use terp_residual_registry::ContractError;

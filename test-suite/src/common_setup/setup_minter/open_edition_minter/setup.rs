@@ -1,5 +1,5 @@
 use crate::common_setup::contract_boxes::{
-    contract_open_edition_factory, contract_open_edition_minter, contract_terp721_base,
+    contract_open_edition_factory, contract_open_edition_minter, contract_cw721_base,
 };
 use crate::common_setup::msg::{
     MinterCollectionResponse, OpenEditionMinterInstantiateParams, OpenEditionMinterSetupParams,
@@ -14,7 +14,7 @@ use open_edition_factory::msg::{
 };
 use open_edition_factory::types::NftData;
 use factory_utils::msg::{CollectionParams, FactoryUtilsExecuteMsg};
-use terp_multi_test::TerpApp;
+
 use terp_sdk::NATIVE_DENOM;
 
 use crate::common_setup::msg::CodeIds;
@@ -53,7 +53,7 @@ pub fn setup_open_edition_minter_contract(
     let minter_code_id = setup_params.minter_code_id;
     let router = setup_params.router;
     let factory_code_id = setup_params.factory_code_id;
-    let terp721_code_id = setup_params.terp721_code_id;
+    let cw721_code_id = setup_params.cw721_code_id;
     let minter_admin = setup_params.minter_admin;
     let collection_params = setup_params.collection_params;
     let start_time = setup_params.start_time;
@@ -99,7 +99,7 @@ pub fn setup_open_edition_minter_contract(
         Some(coin(min_mint_price.u128(), denom)),
         None,
     );
-    msg.collection_params.code_id = terp721_code_id;
+    msg.collection_params.code_id = cw721_code_id;
     msg.collection_params.info.creator = minter_admin.to_string();
 
     let creation_fee = coins(CREATION_FEE, NATIVE_DENOM);
@@ -123,12 +123,12 @@ pub fn open_edition_minter_code_ids(router: &mut TerpApp) -> CodeIds {
 
     let factory_code_id = router.store_code(contract_open_edition_factory());
 
-    let terp721_code_id = router.store_code(contract_terp721_base());
+    let cw721_code_id = router.store_code(contract_cw721_base());
 
     CodeIds {
         minter_code_id,
         factory_code_id,
-        terp721_code_id,
+        cw721_code_id,
     }
 }
 
@@ -143,9 +143,9 @@ pub fn sudo_update_params(
         let update_msg = match update_msg.clone() {
             Some(some_update_message) => some_update_message,
             None => OpenEditionUpdateParamsMsg {
-                code_id: Some(code_ids.terp721_code_id),
-                add_terp721_code_ids: None,
-                rm_terp721_code_ids: None,
+                code_id: Some(code_ids.cw721_code_id),
+                add_cw721_code_ids: None,
+                rm_cw721_code_ids: None,
                 frozen: None,
                 creation_fee: Some(coin(0, NATIVE_DENOM)),
                 min_mint_price: Some(Coin {
@@ -190,7 +190,7 @@ pub fn configure_open_edition_minter(
             collection_params: collection_param.to_owned(),
             minter_code_id: code_ids.minter_code_id,
             factory_code_id: code_ids.factory_code_id,
-            terp721_code_id: code_ids.terp721_code_id,
+            cw721_code_id: code_ids.cw721_code_id,
             start_time: minter_instantiate_params_vec[index].start_time.to_owned(),
             nft_data: minter_instantiate_params_vec[index]
                 .nft_data

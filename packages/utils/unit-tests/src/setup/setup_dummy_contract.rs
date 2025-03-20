@@ -2,7 +2,7 @@ use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{to_json_binary, Addr, Binary, Deps, DepsMut, Empty, Env, MessageInfo, StdResult};
 use cw_multi_test::{Contract, ContractWrapper, Executor};
 use cw_utils::maybe_addr;
-use terp_multi_test::TerpApp;
+
 use terp_sdk::{Response, TerpMsgWrapper};
 use terp_residual_registry::{fetch_or_set_residuals, ContractError};
 

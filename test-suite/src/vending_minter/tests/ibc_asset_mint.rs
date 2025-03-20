@@ -71,7 +71,7 @@ fn denom_mismatch_creating_minter() {
 
     let minter_code_id = code_ids.minter_code_id;
     let factory_code_id = code_ids.factory_code_id;
-    let terp721_code_id = code_ids.terp721_code_id;
+    let cw721_code_id = code_ids.cw721_code_id;
     let minter_admin = creator;
 
     let mut params = mock_params(None);
@@ -89,7 +89,7 @@ fn denom_mismatch_creating_minter() {
         .unwrap();
 
     let mut msg = mock_create_minter_init_msg(mock_collection_params(), init_msg);
-    msg.collection_params.code_id = terp721_code_id;
+    msg.collection_params.code_id = cw721_code_id;
     msg.collection_params.info.creator = minter_admin.to_string();
     let creation_fee = coins(CREATION_FEE, NATIVE_DENOM);
     let msg = FactoryUtilsExecuteMsg::CreateMinter(msg);
@@ -145,7 +145,7 @@ fn wl_denom_mint() {
 
     let minter_code_id = code_ids.minter_code_id;
     let factory_code_id = code_ids.factory_code_id;
-    let terp721_code_id = code_ids.terp721_code_id;
+    let cw721_code_id = code_ids.cw721_code_id;
     let minter_admin = creator.clone();
 
     let mut params = mock_params(Some(denom.to_string()));
@@ -163,7 +163,7 @@ fn wl_denom_mint() {
         .unwrap();
 
     let mut msg = mock_create_minter_init_msg(mock_collection_params(), init_msg);
-    msg.collection_params.code_id = terp721_code_id;
+    msg.collection_params.code_id = cw721_code_id;
     msg.collection_params.info.creator = minter_admin.to_string();
     let creation_fee = coins(CREATION_FEE, NATIVE_DENOM);
     let msg = FactoryUtilsExecuteMsg::CreateMinter(msg);

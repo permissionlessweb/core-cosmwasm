@@ -16,7 +16,7 @@ export const CONTRACT_MAP = {
   // launchpad artifacts
   VENDING_MINTER: 'vending_minter',
   VENDING_FACTORY: 'vending_factory',
-  TERP721_BASE: 'terp721_base',
+  cw721_base: 'cw721_base',
 }
 
 export type TestUser = {
@@ -129,7 +129,7 @@ export default class Context {
     // Instantiate vendinge_factory
     let vendingFactoryInstantiateMsg: VendingFactoryInstantiateMsg = {
       params: {
-        allowed_terp721_code_ids: [this.codeIds[CONTRACT_MAP.TERP721_BASE]],
+        allowed_cw721_code_ids: [this.codeIds[CONTRACT_MAP.cw721_base]],
         code_id: this.codeIds[CONTRACT_MAP.VENDING_MINTER],
         creation_fee: { amount: '1000000', denom: 'uterp' },
         frozen: false,

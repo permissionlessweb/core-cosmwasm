@@ -6,16 +6,16 @@ mod tests {
     use cw_multi_test::{AppResponse, BankSudo, Executor, SudoMsg};
     use factory_utils::msg::CreateMinterMsg;
     use factory_utils::tests::mock_collection_params;
-    use terp721::ExecuteMsg as Terp721ExecuteMsg;
-    use terp721::{CollectionInfo, InstantiateMsg};
-    use terp_multi_test::TerpApp;
+    use cw721::ExecuteMsg as cw721ExecuteMsg;
+    use cw721::{CollectionInfo, InstantiateMsg};
+    
     use vending_factory::helpers::FactoryContract;
     use vending_factory::msg::{
         ExecuteMsg, InstantiateMsg as FactoryInstantiateMsg, VendingMinterInitMsgExtension,
     };
 
     use crate::common_setup::contract_boxes::{
-        contract_terp721_base, contract_vending_factory, contract_vending_minter, custom_mock_app,
+        contract_cw721_base, contract_vending_factory, contract_vending_minter, custom_mock_app,
     };
     use crate::common_setup::setup_minter::common::constants::CREATION_FEE;
     use crate::common_setup::setup_minter::vending_minter::mock_params::{
@@ -60,11 +60,11 @@ mod tests {
 
     fn proper_instantiate() -> (TerpApp, Addr) {
         let (mut app, factory_contract) = proper_instantiate_factory();
-        let terp721_id = app.store_code(contract_terp721_base());
+        let cw721_id = app.store_code(contract_cw721_base());
 
         let collection_params = mock_collection_params();
         let mut m = mock_create_minter(None, collection_params, None);
-        m.collection_params.code_id = terp721_id;
+        m.collection_params.code_id = cw721_id;
         let msg = ExecuteMsg::CreateMinter(m);
 
         let creation_fee = coin(CREATION_FEE, NATIVE_DENOM);
@@ -78,7 +78,7 @@ mod tests {
         let bal = app.wrap().query_all_balances(ADMIN).unwrap();
         assert_eq!(bal, vec![creation_fee.clone()]);
 
-        // this should create the minter + terp721
+        // this should create the minter + cw721
         let cosmos_msg = factory_contract.call_with_funds(msg, creation_fee).unwrap();
 
         let res = app.execute(Addr::unchecked(ADMIN), cosmos_msg);
@@ -91,10 +91,10 @@ mod tests {
         custom_create_minter_msg: CreateMinterMsg<VendingMinterInitMsgExtension>,
     ) -> (TerpApp, Addr) {
         let (mut app, factory_contract) = proper_instantiate_factory();
-        let terp721_id = app.store_code(contract_terp721_base());
+        let cw721_id = app.store_code(contract_cw721_base());
 
         let mut m = custom_create_minter_msg;
-        m.collection_params.code_id = terp721_id;
+        m.collection_params.code_id = cw721_id;
         let msg = ExecuteMsg::CreateMinter(m);
 
         let creation_fee = coin(CREATION_FEE, NATIVE_DENOM);
@@ -108,7 +108,7 @@ mod tests {
         let bal = app.wrap().query_all_balances(ADMIN).unwrap();
         assert_eq!(bal, vec![creation_fee.clone()]);
 
-        // this should create the minter + terp721
+        // this should create the minter + cw721
         let cosmos_msg = factory_contract.call_with_funds(msg, creation_fee).unwrap();
 
         let res = app.execute(Addr::unchecked(ADMIN), cosmos_msg);
@@ -123,11 +123,11 @@ mod tests {
         use crate::common_setup::setup_minter::vending_minter::mock_params::mock_create_minter_init_msg;
 
         use super::*;
-        use terp721_base::msg::QueryMsg;
+        use cw721_base::msg::QueryMsg;
         use vending_minter::msg::{ConfigResponse, QueryMsg as VendingMinterQueryMsg};
 
         #[test]
-        fn create_terp721_base_collection() {
+        fn create_cw721_base_collection() {
             let (app, contract) = proper_instantiate();
 
             let res: NumTokensResponse = app
@@ -140,9 +140,9 @@ mod tests {
         #[test]
         fn check_ready_unauthorized() {
             let mut app = custom_mock_app();
-            let terp721_id = app.store_code(contract_terp721_base());
+            let cw721_id = app.store_code(contract_cw721_base());
             let msg = InstantiateMsg {
-                name: "terp721".to_string(),
+                name: "cw721".to_string(),
                 symbol: "TERP".to_string(),
                 minter: ADMIN.to_string(),
                 collection_info: CollectionInfo {
@@ -156,11 +156,11 @@ mod tests {
                 },
             };
             let res = app.instantiate_contract(
-                terp721_id,
+                cw721_id,
                 Addr::unchecked(GOVERNANCE),
                 &msg,
                 &[],
-                "terp721-only",
+                "cw721-only",
                 None,
             );
             // should not let create the contract.
@@ -247,7 +247,7 @@ mod tests {
 
     mod start_trading_time {
         use cosmwasm_std::{Decimal, Empty};
-        use terp721::{ResidualInfoResponse, UpdateCollectionInfoMsg};
+        use cw721::{ResidualInfoResponse, UpdateCollectionInfoMsg};
 
         use crate::common_setup::{
             setup_accounts_and_block::setup_block_time,
@@ -255,7 +255,7 @@ mod tests {
         };
 
         use super::*;
-        use terp721_base::{
+        use cw721_base::{
             msg::{CollectionInfoResponse, QueryMsg},
             ContractError,
         };
@@ -277,7 +277,7 @@ mod tests {
             let res = app.execute_contract(
                 creator,
                 contract,
-                &Terp721ExecuteMsg::<Empty, Empty>::UpdateCollectionInfo {
+                &cw721ExecuteMsg::<Empty, Empty>::UpdateCollectionInfo {
                     collection_info: UpdateCollectionInfoMsg {
                         description: None,
                         image: None,
@@ -318,7 +318,7 @@ mod tests {
             let res = app.execute_contract(
                 creator.clone(),
                 contract.clone(),
-                &Terp721ExecuteMsg::<Empty, Empty>::UpdateCollectionInfo {
+                &cw721ExecuteMsg::<Empty, Empty>::UpdateCollectionInfo {
                     collection_info: UpdateCollectionInfoMsg {
                         description: Some(params.info.description.clone()),
                         image: Some(params.info.image.clone()),
@@ -339,7 +339,7 @@ mod tests {
             let res = app.execute_contract(
                 creator.clone(),
                 contract.clone(),
-                &Terp721ExecuteMsg::<Empty, Empty>::UpdateCollectionInfo {
+                &cw721ExecuteMsg::<Empty, Empty>::UpdateCollectionInfo {
                     collection_info: UpdateCollectionInfoMsg {
                         description: Some(params.info.description.clone()),
                         image: Some(params.info.image.clone()),
@@ -372,7 +372,7 @@ mod tests {
             let res = app.execute_contract(
                 creator.clone(),
                 contract.clone(),
-                &Terp721ExecuteMsg::<Empty, Empty>::UpdateCollectionInfo {
+                &cw721ExecuteMsg::<Empty, Empty>::UpdateCollectionInfo {
                     collection_info: UpdateCollectionInfoMsg {
                         description: Some(params.info.description.clone()),
                         image: Some(params.info.image.clone()),
@@ -399,7 +399,7 @@ mod tests {
             let res = app.execute_contract(
                 creator.clone(),
                 contract.clone(),
-                &Terp721ExecuteMsg::<Empty, Empty>::UpdateCollectionInfo {
+                &cw721ExecuteMsg::<Empty, Empty>::UpdateCollectionInfo {
                     collection_info: UpdateCollectionInfoMsg {
                         description: Some(params.info.description.clone()),
                         image: Some(params.info.image.clone()),
@@ -426,7 +426,7 @@ mod tests {
             let res = app.execute_contract(
                 creator.clone(),
                 contract.clone(),
-                &Terp721ExecuteMsg::<Empty, Empty>::UpdateCollectionInfo {
+                &cw721ExecuteMsg::<Empty, Empty>::UpdateCollectionInfo {
                     collection_info: UpdateCollectionInfoMsg {
                         description: Some(params.info.description.clone()),
                         image: Some(params.info.image.clone()),
@@ -449,7 +449,7 @@ mod tests {
             let res = app.execute_contract(
                 creator.clone(),
                 contract.clone(),
-                &Terp721ExecuteMsg::<Empty, Empty>::UpdateCollectionInfo {
+                &cw721ExecuteMsg::<Empty, Empty>::UpdateCollectionInfo {
                     collection_info: UpdateCollectionInfoMsg {
                         description: Some(params.info.description.clone()),
                         image: Some(params.info.image.clone()),
@@ -473,7 +473,7 @@ mod tests {
             let res = app.execute_contract(
                 Addr::unchecked("badguy"),
                 contract.clone(),
-                &Terp721ExecuteMsg::<Empty, Empty>::FreezeCollectionInfo {},
+                &cw721ExecuteMsg::<Empty, Empty>::FreezeCollectionInfo {},
                 &[],
             );
             assert!(res.is_err());
@@ -481,7 +481,7 @@ mod tests {
             let res = app.execute_contract(
                 creator.clone(),
                 contract.clone(),
-                &Terp721ExecuteMsg::<Empty, Empty>::FreezeCollectionInfo {},
+                &cw721ExecuteMsg::<Empty, Empty>::FreezeCollectionInfo {},
                 &[],
             );
             assert!(res.is_ok());
@@ -490,7 +490,7 @@ mod tests {
             let res = app.execute_contract(
                 creator,
                 contract,
-                &Terp721ExecuteMsg::<Empty, Empty>::UpdateCollectionInfo {
+                &cw721ExecuteMsg::<Empty, Empty>::UpdateCollectionInfo {
                     collection_info: UpdateCollectionInfoMsg {
                         description: Some(params.info.description.clone()),
                         image: Some(params.info.image.clone()),
@@ -511,8 +511,8 @@ mod tests {
         use crate::common_setup::setup_minter::vending_minter::mock_params::mock_create_minter_init_msg;
         use cosmwasm_std::{Decimal, Response, Uint128};
         use factory_utils::msg::CollectionParams;
-        use terp721::ResidualInfoResponse;
-        use terp721_base::msg::{CollectionInfoResponse, QueryMsg};
+        use cw721::ResidualInfoResponse;
+        use cw721_base::msg::{CollectionInfoResponse, QueryMsg};
 
         #[test]
         fn standard_payout() {
@@ -708,7 +708,7 @@ mod tests {
         use crate::common_setup::setup_minter::vending_minter::mock_params::mock_create_minter_init_msg;
 
         use super::*;
-        use terp721_base::msg::QueryMsg;
+        use cw721_base::msg::QueryMsg;
         use vending_minter::msg::{ConfigResponse, QueryMsg as VendingMinterQueryMsg};
 
         #[test]
@@ -733,7 +733,7 @@ mod tests {
                 .wrap()
                 .query_wasm_smart(minter.clone(), &VendingMinterQueryMsg::Config {})
                 .unwrap();
-            let terp721_address = res.terp721_address;
+            let cw721_address = res.cw721_address;
 
             let update_ownership_msg: cw721ExecuteMsg<Empty, Empty> =
                 cw721ExecuteMsg::UpdateOwnership(cw_ownable::Action::TransferOwnership {
@@ -742,7 +742,7 @@ mod tests {
                 });
             let res = app.execute_contract(
                 Addr::unchecked(minter),
-                Addr::unchecked(terp721_address.clone()),
+                Addr::unchecked(cw721_address.clone()),
                 &update_ownership_msg,
                 &[],
             );
@@ -755,8 +755,8 @@ mod tests {
             let res: cw_ownable::Ownership<Addr> = app
                 .wrap()
                 .query_wasm_smart(
-                    terp721_address.clone(),
-                    &terp721_base::msg::QueryMsg::Ownership {},
+                    cw721_address.clone(),
+                    &cw721_base::msg::QueryMsg::Ownership {},
                 )
                 .unwrap();
             let pending_owner = res.pending_owner;
@@ -767,7 +767,7 @@ mod tests {
                 cw721ExecuteMsg::UpdateOwnership(cw_ownable::Action::AcceptOwnership {});
             let res = app.execute_contract(
                 Addr::unchecked("new_owner".to_string()),
-                Addr::unchecked(terp721_address.clone()),
+                Addr::unchecked(cw721_address.clone()),
                 &accept_ownership_msg,
                 &[],
             );
@@ -780,7 +780,7 @@ mod tests {
 
             let res: cw_ownable::Ownership<Addr> = app
                 .wrap()
-                .query_wasm_smart(terp721_address, &terp721_base::msg::QueryMsg::Ownership {})
+                .query_wasm_smart(cw721_address, &cw721_base::msg::QueryMsg::Ownership {})
                 .unwrap();
 
             let expected_onwership_response = Ownership {
@@ -792,33 +792,33 @@ mod tests {
         }
     }
 
-    mod terp721_mutable {
+    mod cw721_mutable {
         use cosmwasm_std::{coin, Addr};
         use cw721::NumTokensResponse;
         use cw_multi_test::{BankSudo, Executor, SudoMsg};
         use factory_utils::tests::mock_collection_params;
-        use terp721_base::msg::QueryMsg;
-        use terp_multi_test::TerpApp;
+        use cw721_base::msg::QueryMsg;
+        
         use terp_sdk::NATIVE_DENOM;
         const ADMIN: &str = "admin";
 
         use crate::common_setup::setup_minter::common::constants::CREATION_FEE;
         use crate::{
             common_setup::{
-                contract_boxes::contract_terp721_updatable,
+                contract_boxes::contract_cw721_updatable,
                 setup_minter::vending_minter::mock_params::mock_create_minter,
             },
-            terp721_base::tests::integration_tests::tests::proper_instantiate_factory,
+            cw721_base::tests::integration_tests::tests::proper_instantiate_factory,
         };
         use vending_factory::msg::ExecuteMsg;
 
         fn proper_instantiate() -> (TerpApp, Addr) {
             let (mut app, factory_contract) = proper_instantiate_factory();
-            let terp721_id = app.store_code(contract_terp721_updatable());
+            let cw721_id = app.store_code(contract_cw721_updatable());
 
             let collection_params = mock_collection_params();
             let mut m = mock_create_minter(None, collection_params, None);
-            m.collection_params.code_id = terp721_id;
+            m.collection_params.code_id = cw721_id;
             let msg = ExecuteMsg::CreateMinter(m);
 
             let creation_fee = coin(CREATION_FEE, NATIVE_DENOM);
@@ -832,7 +832,7 @@ mod tests {
             let bal = app.wrap().query_all_balances(ADMIN).unwrap();
             assert_eq!(bal, vec![creation_fee.clone()]);
 
-            // this should create the minter + terp721
+            // this should create the minter + cw721
             let cosmos_msg = factory_contract.call_with_funds(msg, creation_fee).unwrap();
 
             let res = app.execute(Addr::unchecked(ADMIN), cosmos_msg);
@@ -842,7 +842,7 @@ mod tests {
         }
 
         #[test]
-        fn create_terp721_mutable_collection() {
+        fn create_cw721_mutable_collection() {
             let (app, contract) = proper_instantiate();
 
             let res: NumTokensResponse = app

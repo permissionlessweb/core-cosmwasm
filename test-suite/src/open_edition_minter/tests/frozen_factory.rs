@@ -35,8 +35,8 @@ fn frozen_factory_cannot_create_new_minters() {
     let factory_addr = vt.collection_response_vec[0].factory.clone().unwrap();
 
     let update_msg = OpenEditionUpdateParamsMsg {
-        add_terp721_code_ids: None,
-        rm_terp721_code_ids: None,
+        add_cw721_code_ids: None,
+        rm_cw721_code_ids: None,
         frozen: Some(true),
         code_id: None,
         creation_fee: None,

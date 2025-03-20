@@ -36,6 +36,6 @@ schemars        = { workspace = true }
 serde           = { workspace = true }
 terp-fee        = { workspace = true }
 factory-utils    = { workspace = true }
-terp721           = { workspace = true }
+
 terp-sdk          = { workspace = true }
 thiserror       = { workspace = true }

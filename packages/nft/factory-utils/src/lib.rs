@@ -12,7 +12,7 @@ pub type CodeId = u64;
 pub struct MinterParams<T> {
     /// The minter code id
     pub code_id: u64,
-    pub allowed_terp721_code_ids: Vec<CodeId>,
+    pub allowed_cw721_code_ids: Vec<CodeId>,
     pub frozen: bool,
     pub creation_fee: Coin,
     pub min_mint_price: Coin,

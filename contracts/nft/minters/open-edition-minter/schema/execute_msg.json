@@ -76,7 +76,7 @@
       "additionalProperties": false
     },
     {
-      "description": "Runs custom checks against TradingStartTime on VendingMinter, then updates by calling terp721-base",
+      "description": "Runs custom checks against TradingStartTime on VendingMinter, then updates by calling cw721-base",
       "type": "object",
       "required": [
         "update_start_trading_time"

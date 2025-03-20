@@ -11,7 +11,7 @@ use cosmwasm_std::{coins, Addr, Timestamp};
 use cw_multi_test::Executor;
 use factory_utils::msg::FactoryUtilsExecuteMsg;
 use factory_utils::tests::mock_collection_params_1;
-use terp_multi_test::TerpApp;
+
 use terp_sdk::{GENESIS_MINT_START_TIME, NATIVE_DENOM};
 
 use crate::headstash_airdrop::setup::mock_earlybird_contract::mock_earlybird;

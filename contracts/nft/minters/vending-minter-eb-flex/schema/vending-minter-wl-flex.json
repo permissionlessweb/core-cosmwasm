@@ -138,7 +138,7 @@
         "description": "Common params for all minters used for storage",
         "type": "object",
         "required": [
-          "allowed_terp721_code_ids",
+          "allowed_cw721_code_ids",
           "code_id",
           "creation_fee",
           "extension",
@@ -148,7 +148,7 @@
           "mint_fee_bps"
         ],
         "properties": {
-          "allowed_terp721_code_ids": {
+          "allowed_cw721_code_ids": {
             "type": "array",
             "items": {
               "type": "integer",
@@ -387,7 +387,7 @@
         "additionalProperties": false
       },
       {
-        "description": "Runs custom checks against TradingStartTime on VendingMinter, then updates by calling terp721-base",
+        "description": "Runs custom checks against TradingStartTime on VendingMinter, then updates by calling cw721-base",
         "type": "object",
         "required": [
           "update_start_trading_time"
@@ -661,8 +661,8 @@
         "mint_price",
         "num_tokens",
         "per_address_limit",
-        "terp721_address",
-        "terp721_code_id",
+        "cw721_address",
+        "cw721_code_id",
         "start_time"
       ],
       "properties": {
@@ -698,10 +698,10 @@
           "format": "uint32",
           "minimum": 0.0
         },
-        "terp721_address": {
+        "cw721_address": {
           "type": "string"
         },
-        "terp721_code_id": {
+        "cw721_code_id": {
           "type": "integer",
           "format": "uint64",
           "minimum": 0.0

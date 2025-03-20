@@ -66,7 +66,7 @@ pub fn mock_create_minter_init_msg(
 pub fn mock_params_proper() -> OpenEditionMinterParams {
     OpenEditionMinterParams {
         code_id: 1,
-        allowed_terp721_code_ids: vec![1, 3, 5, 6],
+        allowed_cw721_code_ids: vec![1, 3, 5, 6],
         frozen: false,
         creation_fee: coin(CREATION_FEE, NATIVE_DENOM),
         min_mint_price: coin(MIN_MINT_PRICE_OPEN_EDITION, NATIVE_DENOM),
@@ -92,7 +92,7 @@ pub fn mock_params_custom(custom_params: OpenEditionMinterCustomParams) -> OpenE
         .unwrap_or(Uint128::new(MIN_MINT_PRICE_OPEN_EDITION));
     OpenEditionMinterParams {
         code_id: 1,
-        allowed_terp721_code_ids: vec![1, 3, 5, 6],
+        allowed_cw721_code_ids: vec![1, 3, 5, 6],
         frozen: false,
         creation_fee: coin(CREATION_FEE, NATIVE_DENOM),
         min_mint_price: coin(MIN_MINT_PRICE_OPEN_EDITION, denom),
@@ -116,7 +116,7 @@ pub fn mock_params_custom_min_mint_price(
 ) -> OpenEditionMinterParams {
     OpenEditionMinterParams {
         code_id: 1,
-        allowed_terp721_code_ids: vec![1, 3, 5, 6],
+        allowed_cw721_code_ids: vec![1, 3, 5, 6],
         frozen: false,
         creation_fee: coin(CREATION_FEE, NATIVE_DENOM),
         min_mint_price,

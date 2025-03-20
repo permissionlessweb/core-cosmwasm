@@ -23,13 +23,13 @@ mod tests {
                 .wrap()
                 .query_wasm_smart(factory_contract.0.to_string(), &query_config_msg)
                 .unwrap();
-            assert_eq!(res.params.allowed_terp721_code_ids, vec![1, 3, 5, 6]);
+            assert_eq!(res.params.allowed_cw721_code_ids, vec![1, 3, 5, 6]);
             assert!(!res.params.frozen);
             assert_eq!(res.params.mint_fee_bps, 1000);
 
             let update_msg = OpenEditionUpdateParamsMsg {
-                add_terp721_code_ids: Some(vec![12, 24]),
-                rm_terp721_code_ids: Some(vec![1]),
+                add_cw721_code_ids: Some(vec![12, 24]),
+                rm_cw721_code_ids: Some(vec![1]),
                 frozen: Some(true),
                 code_id: None,
                 creation_fee: None,
@@ -50,7 +50,7 @@ mod tests {
                 .wrap()
                 .query_wasm_smart(factory_contract.0.to_string(), &query_config_msg)
                 .unwrap();
-            assert_eq!(res.params.allowed_terp721_code_ids, vec![3, 5, 6, 12, 24]);
+            assert_eq!(res.params.allowed_cw721_code_ids, vec![3, 5, 6, 12, 24]);
             assert!(res.params.frozen);
             assert_eq!(res.params.mint_fee_bps, 2000);
         }

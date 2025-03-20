@@ -8,6 +8,6 @@ EOF
 
 echo $MSG
 
-terpd tx wasm execute $TERP721 "$MSG" \
+terpd tx wasm execute $cw721 "$MSG" \
 --gas-prices 0.025uthiolx --gas auto --gas-adjustment 1.9 \
 --from $KEY -y -b block -o json | jq .

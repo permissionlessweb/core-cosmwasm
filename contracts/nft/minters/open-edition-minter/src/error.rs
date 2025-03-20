@@ -85,7 +85,7 @@ pub enum ContractError {
     #[error("InvalidStartTradingTime {0} > {1}")]
     InvalidStartTradingTime(Timestamp, Timestamp),
 
-    #[error("Instantiate terp721 error")]
+    #[error("Instantiate cw721 error")]
     InstantiateSg721Error {},
 
     #[error("Invalid base token URI (must be an IPFS URI)")]

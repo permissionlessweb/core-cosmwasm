@@ -1,6 +1,6 @@
 use cosmwasm_std::{coin, Addr, Timestamp};
 use cw_multi_test::Executor;
-use terp_multi_test::TerpApp;
+
 use terp_sdk::{GENESIS_MINT_START_TIME, NATIVE_DENOM};
 use earlybird::msg::InstantiateMsg as EarlybirdInstantiateMsg;
 

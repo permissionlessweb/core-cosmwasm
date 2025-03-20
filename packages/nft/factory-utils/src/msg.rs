@@ -1,6 +1,5 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Coin;
-use terp721::{CollectionInfo, ResidualInfoResponse};
 
 #[cw_serde]
 pub struct CreateMinterMsg<T> {
@@ -22,8 +21,8 @@ pub struct CollectionParams {
 pub struct UpdateMinterParamsMsg<T> {
     /// The minter code id
     pub code_id: Option<u64>,
-    pub add_terp721_code_ids: Option<Vec<u64>>,
-    pub rm_terp721_code_ids: Option<Vec<u64>>,
+    pub add_cw721_code_ids: Option<Vec<u64>>,
+    pub rm_cw721_code_ids: Option<Vec<u64>>,
     pub frozen: Option<bool>,
     pub creation_fee: Option<Coin>,
     pub min_mint_price: Option<Coin>,

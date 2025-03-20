@@ -6,7 +6,7 @@ mod tests {
     use base_factory::msg::InstantiateMsg;
     use cosmwasm_std::Addr;
     use cw_multi_test::Executor;
-    use terp_multi_test::TerpApp;
+    
 
     const GOVERNANCE: &str = "governance";
 

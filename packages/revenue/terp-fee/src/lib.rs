@@ -1,6 +1,8 @@
-use cosmwasm_std::{coin, coins, Addr, BankMsg, Coin, Decimal, Event, MessageInfo, Uint128};
+use cosmwasm_std::{
+    coin, coins, Addr, BankMsg, Coin, Decimal, Event, MessageInfo, Response, SubMsg, Uint128,
+};
 use cw_utils::{may_pay, PaymentError};
-use terp_sdk::{create_fund_community_pool_msg, Response, SubMsg, NATIVE_DENOM};
+use terp_sdk::{create_fund_community_pool_msg_default, NATIVE_DENOM};
 use thiserror::Error;
 
 // governance parameters
@@ -75,14 +77,15 @@ pub fn fair_burn(fee: u128, developer: Option<Addr>, res: &mut Response) {
     let mut event = Event::new("fair-burn");
 
     // calculate the fair burn fee
-    let burn_fee = (Decimal::from_atomics(atomics, decimal_places) * Decimal::percent(FEE_BURN_PERCENT)).;
-    let burn_coin = coins(burn_fee, NATIVE_DENOM);
-    res.messages
-        .push(SubMsg::new(BankMsg::Burn { amount: burn_coin }));
-    event = event.add_attribute("burn_amount", Uint128::from(burn_fee).to_string());
+    // let burn_fee = (Decimal::from_atomics(fee, 12).expect("errrr") * Decimal::percent(FEE_BURN_PERCENT)).u;
+    // let burn_coin = coins(burn_fee, NATIVE_DENOM);
+    // res.messages
+    //     .push(SubMsg::new(BankMsg::Burn { amount: burn_coin }));
+    // event = event.add_attribute("burn_amount", Uint128::from(burn_fee).to_string());
 
     // send remainder to developer or community pool
-    let remainder = fee - burn_fee;
+    let remainder = fee;
+    // let remainder = fee - burn_fee;
 
     if let Some(dev) = developer {
         res.messages.push(SubMsg::new(BankMsg::Send {
@@ -93,7 +96,7 @@ pub fn fair_burn(fee: u128, developer: Option<Addr>, res: &mut Response) {
         event = event.add_attribute("dev_amount", Uint128::from(remainder).to_string());
     } else {
         res.messages
-            .push(SubMsg::new(create_fund_community_pool_msg(coins(
+            .push(SubMsg::new(create_fund_community_pool_msg_default(coins(
                 remainder,
                 NATIVE_DENOM,
             ))));

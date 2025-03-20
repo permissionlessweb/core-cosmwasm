@@ -9,8 +9,8 @@
     "mint_price",
     "nft_data",
     "per_address_limit",
-    "terp721_address",
-    "terp721_code_id",
+    "cw721_address",
+    "cw721_code_id",
     "start_time"
   ],
   "properties": {
@@ -44,10 +44,10 @@
       "format": "uint32",
       "minimum": 0.0
     },
-    "terp721_address": {
+    "cw721_address": {
       "type": "string"
     },
-    "terp721_code_id": {
+    "cw721_code_id": {
       "type": "integer",
       "format": "uint64",
       "minimum": 0.0

@@ -10,14 +10,14 @@ use factory_utils::{
     msg::{CollectionParams, CreateMinterMsg},
     MinterParams,
 };
-use terp721::CollectionInfo;
+use cw721::CollectionInfo;
 use vending_factory::{
     msg::{InstantiateMsg, VendingMinterInitMsgExtension},
     state::ParamsExtension,
 };
 
 // contract names used by cosm-orc to register stored code ids / instantiated addresses:
-pub const TERP721_NAME: &str = "terp721_base";
+pub const cw721_NAME: &str = "cw721_base";
 pub const FACTORY_NAME: &str = "vending_factory";
 pub const MINTER_NAME: &str = "vending_minter";
 
@@ -38,7 +38,7 @@ pub fn instantiate_factory(
         &InstantiateMsg {
             params: MinterParams {
                 code_id: chain.orc.contract_map.code_id(MINTER_NAME).unwrap(),
-                allowed_terp721_code_ids: vec![chain.orc.contract_map.code_id(TERP721_NAME).unwrap()],
+                allowed_cw721_code_ids: vec![chain.orc.contract_map.code_id(cw721_NAME).unwrap()],
                 frozen: false,
                 creation_fee: Coin {
                     amount: Uint128::new(CREATION_FEE),
@@ -95,7 +95,7 @@ pub fn create_minter_msg(
             earlybird: None,
         },
         collection_params: CollectionParams {
-            code_id: chain.orc.contract_map.code_id(TERP721_NAME).unwrap(),
+            code_id: chain.orc.contract_map.code_id(cw721_NAME).unwrap(),
             name: "Collection".to_string(),
             symbol: "SYM".to_string(),
             info: CollectionInfo {

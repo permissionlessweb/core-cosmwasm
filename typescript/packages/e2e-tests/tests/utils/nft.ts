@@ -27,7 +27,7 @@ export const createMinter = async (context: Context) => {
         earlybird: null,
       },
       collection_params: {
-        code_id: context.getCodeId(CONTRACT_MAP.TERP721_BASE),
+        code_id: context.getCodeId(CONTRACT_MAP.cw721_base),
         name: 'Test Collection',
         symbol: 'TC',
         info: {
@@ -60,7 +60,7 @@ export const createMinter = async (context: Context) => {
   let collectionAddress = instantiateEvents[1].attributes[0].value
 
   context.pushContractAddress(CONTRACT_MAP.VENDING_MINTER, minterAddress)
-  context.pushContractAddress(CONTRACT_MAP.TERP721_BASE, collectionAddress)
+  context.pushContractAddress(CONTRACT_MAP.cw721_base, collectionAddress)
 
   return [minterAddress, collectionAddress]
 }

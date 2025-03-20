@@ -6,7 +6,7 @@
 contracts=(
     "vending_factory"
     "vending_minter"
-    "terp721_base"
+    "cw721_base"
 )
 
 # Check if Cargo.toml file exists

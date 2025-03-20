@@ -1,8 +1,8 @@
 use crate::{error::ContractError, msg::InstantiateMsg};
 
-use cosmwasm_std::{DepsMut, Env, Event, MessageInfo};
+use cosmwasm_std::{DepsMut, Env, Event, MessageInfo, Response};
 use cw2::set_contract_version;
-use terp_sdk::Response;
+
 
 // version info for migration info
 pub const CONTRACT_NAME: &str = env!("CARGO_PKG_NAME");

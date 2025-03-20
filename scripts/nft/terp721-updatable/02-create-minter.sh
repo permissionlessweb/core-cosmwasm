@@ -1,6 +1,6 @@
 KEY=$(terpd keys show $ADMIN | jq -r .name)
 FACTORY=terp14kq48e55k8sdpu4tv5dpjshsk737am7mjf7z5k8d7h26vxw96ensta0nqx
-TERP721_CODE_ID=128
+cw721_CODE_ID=128
 
 # init msg
 # VendingMinterInitMsgExtension {
@@ -44,7 +44,7 @@ MSG=$(cat <<EOF
             "per_address_limit": 30
         },
         "collection_params": {
-            "code_id": $TERP721_CODE_ID,
+            "code_id": $cw721_CODE_ID,
             "name": "In_Da_Game",
             "symbol": "EASP0RTS",
             "info": {

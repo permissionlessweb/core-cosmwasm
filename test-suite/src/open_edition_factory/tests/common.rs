@@ -4,7 +4,7 @@ use cosmwasm_std::Addr;
 use cw_multi_test::Executor;
 use open_edition_factory::helpers::FactoryContract;
 use open_edition_factory::msg::InstantiateMsg;
-use terp_multi_test::TerpApp;
+
 
 const GOVERNANCE: &str = "governance";
 

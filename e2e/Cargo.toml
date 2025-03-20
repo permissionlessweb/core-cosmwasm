@@ -20,8 +20,6 @@ rand           = "0.8"
 
 cosmwasm-std         = { workspace = true }
 factory-utils                  = { workspace = true }
-terp721                = { workspace = true }
-terp721-base           = { workspace = true }
 terp-metadata          = { workspace = true }
 vending-factory      = { workspace = true }
 vending-minter       = { workspace = true }

@@ -35,7 +35,6 @@ serde                   = { workspace = true }
 terp-fee                  = { workspace = true }
 factory-utils                     = { workspace = true }
 minter-utils                     = { workspace = true }
-terp721                   = { workspace = true }
 terp-sdk                  = { workspace = true }
 terp-metadata             = { workspace = true }
 thiserror               = { workspace = true }

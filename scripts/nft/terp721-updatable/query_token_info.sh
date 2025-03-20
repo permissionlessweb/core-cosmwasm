@@ -4,7 +4,7 @@ MSG=$(cat <<EOF
 }
 EOF
 )
-echo $MSG $TERP721
+echo $MSG $cw721
 
-terpd q wasm contract-state smart $TERP721 "$MSG"
+terpd q wasm contract-state smart $cw721 "$MSG"
 

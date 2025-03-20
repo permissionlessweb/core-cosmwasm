@@ -36,7 +36,7 @@ pub enum ContractError {
     #[error("InvalidDenom {expected} got {got}")]
     InvalidDenom { expected: String, got: String },
 
-    #[error("Instantiate terp721 error")]
+    #[error("Instantiate cw721 error")]
     InstantiateSg721Error {},
 
     #[error("InvalidStartTradingTime {0} < {1}")]

@@ -1,11 +1,11 @@
 use cosmwasm_std::{
-    ensure, to_json_binary, Addr, BankMsg, Binary, Coin, Deps, DepsMut, Empty, Env, Event, MessageInfo,
-    StdResult,
+    ensure, to_json_binary, Addr, BankMsg, Binary, Coin, Deps, DepsMut, Empty, Env, Event,
+    MessageInfo, StdResult,
 };
 use cw2::{get_contract_version, set_contract_version};
 use cw_utils::{maybe_addr, NativeBalance};
-use terp_sdk::{create_fund_community_pool_msg, Response, NATIVE_DENOM};
 use std::collections::BTreeMap;
+use terp_sdk::{create_fund_community_pool_msg, Response, NATIVE_DENOM};
 
 use crate::{
     error::ContractError,
@@ -197,20 +197,15 @@ mod tests {
         coin, coins, to_json_binary, Addr, Coin, Decimal, Event, StdResult, Uint128, WasmMsg,
     };
     use cw_multi_test::{
-        AppResponse, BankSudo, Contract, ContractWrapper, Executor, SudoMsg as CwSudoMsg, WasmSudo,
+        App, AppResponse, BankSudo, Contract, ContractWrapper, Executor, SudoMsg as CwSudoMsg,
+        WasmSudo,
     };
-    use terp_multi_test::TerpApp;
+
     use terp_sdk::{TerpMsgWrapper, NATIVE_DENOM};
 
     const INITIAL_BALANCE: u128 = 5_000_000_000;
 
-    fn contract() -> Box<dyn Contract<TerpMsgWrapper>> {
-        let contract = ContractWrapper::new(super::execute, super::instantiate, super::query)
-            .with_sudo(super::sudo);
-        Box::new(contract)
-    }
-
-    fn fund_account(app: &mut TerpApp, addr: &Addr, balances: Vec<Coin>) -> StdResult<()> {
+    fn fund_account(app: &mut App, addr: &Addr, balances: Vec<Coin>) -> StdResult<()> {
         app.sudo(CwSudoMsg::Bank({
             BankSudo::Mint {
                 to_address: addr.to_string(),
@@ -236,7 +231,7 @@ mod tests {
 
     #[test]
     fn try_instantiate() {
-        let mut app = TerpApp::default();
+        let mut app = App::default();
         let fair_burn_id = app.store_code(contract());
 
         let creator = Addr::unchecked("creator");
@@ -257,7 +252,7 @@ mod tests {
 
     #[test]
     fn try_sudo_update() {
-        let mut app = TerpApp::default();
+        let mut app = App::default();
         let fair_burn_id = app.store_code(contract());
 
         let creator = Addr::unchecked("creator");
@@ -284,7 +279,7 @@ mod tests {
         };
         let response = app.sudo(CwSudoMsg::Wasm(WasmSudo {
             contract_addr: fair_burn.clone(),
-            msg: to_json_binary(&sudo_msg).unwrap(),
+            message: to_json_binary(&sudo_msg).unwrap(),
         }));
         assert!(response.is_ok());
 
@@ -301,7 +296,7 @@ mod tests {
 
     #[test]
     fn try_execute_fair_burn() {
-        let mut app = TerpApp::default();
+        let mut app = App::default();
         let fair_burn_id = app.store_code(contract());
 
         let creator = Addr::unchecked("creator");

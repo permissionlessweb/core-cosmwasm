@@ -1,5 +1,5 @@
-use cosmwasm_std::{coin, to_json_binary, Addr, Coin, Decimal, Uint128, WasmMsg};
-use terp_sdk::Response;
+use cosmwasm_std::{coin, to_json_binary, Addr, Coin, Decimal, Response, Uint128, WasmMsg};
+
 
 use crate::{msg::ExecuteMsg, state::Config};
 

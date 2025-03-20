@@ -182,7 +182,7 @@ fn query_params(deps: Deps) -> StdResult<ParamsResponse> {
 
 fn query_allowed_collection_code_ids(deps: Deps) -> StdResult<AllowedCollectionCodeIdsResponse> {
     let params = SUDO_PARAMS.load(deps.storage)?;
-    let code_ids = params.allowed_terp721_code_ids;
+    let code_ids = params.allowed_cw721_code_ids;
     Ok(AllowedCollectionCodeIdsResponse { code_ids })
 }
 
@@ -191,7 +191,7 @@ fn query_allowed_collection_code_id(
     code_id: u64,
 ) -> StdResult<AllowedCollectionCodeIdResponse> {
     let params = SUDO_PARAMS.load(deps.storage)?;
-    let code_ids = params.allowed_terp721_code_ids;
+    let code_ids = params.allowed_cw721_code_ids;
     let allowed = code_ids.contains(&code_id);
     Ok(AllowedCollectionCodeIdResponse { allowed })
 }

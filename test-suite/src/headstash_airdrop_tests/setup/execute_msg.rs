@@ -10,7 +10,7 @@ use cw_multi_test::error::Error;
 use cw_multi_test::{AppResponse, BankSudo, Executor, SudoMsg};
 use eyre::Result;
 use headstash_airdrop::msg::{ExecuteMsg, InstantiateMsg};
-use terp_multi_test::TerpApp;
+
 use terp_sdk::NATIVE_DENOM;
 
 pub fn instantiate_contract(params: InstantiateParams) -> Result<cosmwasm_std::Addr, anyhow_error> {

@@ -4,7 +4,7 @@ use cosmwasm_std::{Addr, Timestamp};
 use cosmwasm_std::Uint128;
 use open_edition_factory::state::{OpenEditionMinterParams, ParamsExtension};
 use factory_utils::msg::CollectionParams;
-use terp_multi_test::TerpApp;
+
 use vending_factory::msg::VendingMinterInitMsgExtension;
 
 pub struct MinterSetupParams<'a> {
@@ -16,7 +16,7 @@ pub struct MinterSetupParams<'a> {
     pub start_time: Option<Timestamp>,
     pub minter_code_id: u64,
     pub factory_code_id: u64,
-    pub terp721_code_id: u64,
+    pub cw721_code_id: u64,
     pub init_msg: Option<VendingMinterInitMsgExtension>,
 }
 pub struct MinterCollectionResponse {
@@ -41,7 +41,7 @@ use open_edition_factory::types::NftData;
 pub struct CodeIds {
     pub minter_code_id: u64,
     pub factory_code_id: u64,
-    pub terp721_code_id: u64,
+    pub cw721_code_id: u64,
 }
 
 pub struct MinterTemplateResponse<T> {
@@ -72,7 +72,7 @@ pub struct OpenEditionMinterSetupParams<'a> {
     pub end_time: Option<Timestamp>,
     pub minter_code_id: u64,
     pub factory_code_id: u64,
-    pub terp721_code_id: u64,
+    pub cw721_code_id: u64,
     pub init_msg: Option<OpenEditionMinterInitMsgExtension>,
     pub custom_params: Option<OpenEditionMinterParams>,
 }

@@ -22,9 +22,9 @@ fn sudo_params_update_creation_fee() {
     let code_ids = vt.code_ids.clone();
     use cosmwasm_std::Empty;
     let update_msg = factory_utils::msg::UpdateMinterParamsMsg {
-        code_id: Some(code_ids.terp721_code_id),
-        add_terp721_code_ids: None,
-        rm_terp721_code_ids: None,
+        code_id: Some(code_ids.cw721_code_id),
+        add_cw721_code_ids: None,
+        rm_cw721_code_ids: None,
         frozen: None,
         creation_fee: Some(coin(999, NATIVE_DENOM)),
         min_mint_price: Some(coin(MIN_MINT_PRICE, NATIVE_DENOM)),

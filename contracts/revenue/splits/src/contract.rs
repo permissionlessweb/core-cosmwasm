@@ -1,12 +1,12 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    coins, to_json_binary, Addr, BankMsg, Binary, Deps, DepsMut, Env, MessageInfo, Reply, Response,
-    StdResult, SubMsg, Uint128,
+    coins, from_json, instantiate2_address, to_json_binary, Addr, BankMsg, Binary, CanonicalAddr,
+    Deps, DepsMut, Env, MessageInfo, Reply, Response, StdResult, SubMsg, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
 use cw4::{Cw4Contract, Member, MemberListResponse, MemberResponse};
-use cw_utils::{maybe_addr, parse_reply_instantiate_data};
+use cw_utils::maybe_addr;
 use terp_sdk::NATIVE_DENOM;
 
 use crate::error::ContractError;
@@ -28,20 +28,39 @@ pub const MAX_GROUP_SIZE: u32 = 25;
 pub fn instantiate(
     mut deps: DepsMut,
     env: Env,
-    _info: MessageInfo,
+    info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
     let self_addr = env.contract.address;
 
-    let admin_addr = maybe_addr(deps.api, msg.admin)?;
+    let admin_addr = maybe_addr(deps.api, msg.admin.clone())?;
     ADMIN.set(deps.branch(), admin_addr)?;
 
     match msg.group {
-        Group::Cw4Instantiate(init) => Ok(Response::default().add_submessage(
-            SubMsg::reply_on_success(init.into_wasm_msg(self_addr), INIT_GROUP_REPLY_ID),
-        )),
+        Group::Cw4Instantiate(init) => {
+            let salt = &env.block.height.to_be_bytes();
+            let contract_info = deps.querier.query_wasm_contract_info(self_addr.clone())?;
+            let code_info = deps.querier.query_wasm_code_info(contract_info.code_id)?;
+            let addr = instantiate2_address(
+                code_info.checksum.as_slice(),
+                &deps.api.addr_canonicalize(&info.sender.as_str())?,
+                salt,
+            )?;
+
+            let init2 = WasmMsg::Instantiate2 {
+                admin: msg.admin,
+                code_id: init.code_id,
+                label: init.label,
+                msg: init.msg,
+                funds: info.funds,
+                salt: Binary::new(salt.to_vec()),
+            };
+            Ok(Response::default().add_submessage(
+                SubMsg::reply_on_success(init2, INIT_GROUP_REPLY_ID).with_payload(addr.to_vec()),
+            ))
+        }
         Group::Cw4Address(addr) => {
             let group = Cw4Contract(
                 deps.api
@@ -204,20 +223,10 @@ pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractE
         return Err(ContractError::InvalidReplyID {});
     }
 
-    let reply = parse_reply_instantiate_data(msg);
-    match reply {
-        Ok(res) => {
-            let group =
-                Cw4Contract(deps.api.addr_validate(&res.contract_address).map_err(|_| {
-                    ContractError::InvalidGroup {
-                        addr: res.contract_address.clone(),
-                    }
-                })?);
+    let addr: CanonicalAddr = from_json(msg.payload.clone())?;
+    let human_addr = deps.api.addr_humanize(&addr)?;
 
-            GROUP.save(deps.storage, &group)?;
-
-            Ok(Response::default().add_attribute("action", "reply_on_success"))
-        }
-        Err(_) => Err(ContractError::ReplyOnSuccess {}),
-    }
+    let group = Cw4Contract(human_addr);
+    GROUP.save(deps.storage, &group)?;
+    Ok(Response::new())
 }

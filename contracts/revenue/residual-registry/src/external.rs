@@ -4,9 +4,11 @@ use crate::{
     ContractError,
 };
 
-use cosmwasm_std::{ensure, to_json_binary, Addr, Deps, MessageInfo, QuerierWrapper, WasmMsg};
-use terp721_base::msg::{CollectionInfoResponse, QueryMsg as Terp721QueryMsg};
-use terp_sdk::Response;
+use cosmwasm_std::{
+    ensure, to_json_binary, Addr, Deps, Empty, MessageInfo, QuerierWrapper, Response, WasmMsg,
+};
+use cw721::{msg::CollectionInfoAndExtensionResponse as CollectionInfoResponse, Ownership};
+use cw721_base::msg::QueryMsg as cw721QueryMsg;
 
 /// Ensures that the sender is the collection creator.
 pub fn only_collection_creator(
@@ -14,12 +16,12 @@ pub fn only_collection_creator(
     info: &MessageInfo,
     collection: &Addr,
 ) -> Result<(), ContractError> {
-    let collection_info: CollectionInfoResponse = deps
+    let collection_info: Ownership<Addr> = deps
         .querier
-        .query_wasm_smart(collection, &Terp721QueryMsg::CollectionInfo {})?;
+        .query_wasm_smart(collection, &cw721QueryMsg::GetCreatorOwnership {})?;
 
     ensure!(
-        info.sender == collection_info.creator,
+        info.sender == collection_info.owner.expect("creator should be set"),
         ContractError::Unauthorized("Only collection owner can execute this action".to_string())
     );
 
@@ -90,35 +92,37 @@ pub fn fetch_or_set_residuals(
     protocol: Option<&Addr>,
     mut response: Response,
 ) -> Result<(Option<ResidualEntry>, Response), ContractError> {
-    let residual_entry = fetch_residual_entry(&deps.querier, residual_registry, collection, protocol)?;
+    let residual_entry =
+        fetch_residual_entry(&deps.querier, residual_registry, collection, protocol)?;
     if let Some(residual_entry) = residual_entry {
         return Ok((Some(residual_entry), response));
     }
 
-    let collection_info: CollectionInfoResponse = deps
-        .querier
-        .query_wasm_smart(collection, &Terp721QueryMsg::CollectionInfo {})?;
+    let collection_info: CollectionInfoResponse<Empty> = deps.querier.query_wasm_smart(
+        collection,
+        &cw721QueryMsg::GetCollectionInfoAndExtension {},
+    )?;
 
-    if let Some(residual_info_response) = collection_info.residual_info {
-        let residual_entry = ResidualEntry {
-            recipient: deps
-                .api
-                .addr_validate(&residual_info_response.payment_address)?,
-            share: residual_info_response.share,
-            updated: None,
-        };
+    // if let Some(residual_info_response) = collection_info.residual_info {
+    //     let residual_entry = ResidualEntry {
+    //         recipient: deps
+    //             .api
+    //             .addr_validate(&residual_info_response.payment_address)?,
+    //         share: residual_info_response.share,
+    //         updated: None,
+    //     };
 
-        response = response.add_message(WasmMsg::Execute {
-            contract_addr: residual_registry.to_string(),
-            msg: to_json_binary(&ExecuteMsg::InitializeCollectionResidual {
-                collection: collection.to_string(),
-            })
-            .unwrap(),
-            funds: vec![],
-        });
+    //     response = response.add_message(WasmMsg::Execute {
+    //         contract_addr: residual_registry.to_string(),
+    //         msg: to_json_binary(&ExecuteMsg::InitializeCollectionResidual {
+    //             collection: collection.to_string(),
+    //         })
+    //         .unwrap(),
+    //         funds: vec![],
+    //     });
 
-        return Ok((Some(residual_entry), response));
-    }
+    //     return Ok((Some(residual_entry), response));
+    // }
 
     Ok((None, response))
 }

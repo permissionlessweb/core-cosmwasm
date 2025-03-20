@@ -160,15 +160,15 @@ pub fn update_params<T, C>(
     }
 
     // add new code ids, then rm code ids
-    if let Some(add_terp721_code_ids) = param_msg.add_terp721_code_ids {
-        for code_id in add_terp721_code_ids {
-            params.allowed_terp721_code_ids.push(code_id);
+    if let Some(add_cw721_code_ids) = param_msg.add_cw721_code_ids {
+        for code_id in add_cw721_code_ids {
+            params.allowed_cw721_code_ids.push(code_id);
         }
     }
-    params.allowed_terp721_code_ids.dedup();
-    if let Some(rm_terp721_code_ids) = param_msg.rm_terp721_code_ids {
-        for code_id in rm_terp721_code_ids {
-            params.allowed_terp721_code_ids.retain(|&x| x != code_id);
+    params.allowed_cw721_code_ids.dedup();
+    if let Some(rm_cw721_code_ids) = param_msg.rm_cw721_code_ids {
+        for code_id in rm_cw721_code_ids {
+            params.allowed_cw721_code_ids.retain(|&x| x != code_id);
         }
     }
 
@@ -201,7 +201,7 @@ fn query_params(deps: Deps) -> StdResult<ParamsResponse> {
 
 fn query_allowed_collection_code_ids(deps: Deps) -> StdResult<AllowedCollectionCodeIdsResponse> {
     let params = SUDO_PARAMS.load(deps.storage)?;
-    let code_ids = params.allowed_terp721_code_ids;
+    let code_ids = params.allowed_cw721_code_ids;
     Ok(AllowedCollectionCodeIdsResponse { code_ids })
 }
 
@@ -210,7 +210,7 @@ fn query_allowed_collection_code_id(
     code_id: u64,
 ) -> StdResult<AllowedCollectionCodeIdResponse> {
     let params = SUDO_PARAMS.load(deps.storage)?;
-    let code_ids = params.allowed_terp721_code_ids;
+    let code_ids = params.allowed_cw721_code_ids;
     let allowed = code_ids.contains(&code_id);
     Ok(AllowedCollectionCodeIdResponse { allowed })
 }

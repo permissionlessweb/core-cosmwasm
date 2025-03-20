@@ -15,7 +15,7 @@ pub use msg::{
      TerpMsg, TerpMsgWrapper,
 };
 
-pub type Response = cosmwasm_std::Response<TerpMsgWrapper>;
+pub type Response = cosmwasm_std::Response;
 pub type SubMsg = cosmwasm_std::SubMsg<TerpMsgWrapper>;
 pub type CosmosMsg = cosmwasm_std::CosmosMsg<TerpMsgWrapper>;
 

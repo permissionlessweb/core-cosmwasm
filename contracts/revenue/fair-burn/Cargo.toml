@@ -44,4 +44,3 @@ thiserror       = { workspace = true }
 
 [dev-dependencies]
 cw-multi-test = { workspace = true }
-terp-multi-test = { workspace = true }

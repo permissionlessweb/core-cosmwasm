@@ -1,5 +1,5 @@
 use crate::common_setup::contract_boxes::{
-    contract_terp721_base, contract_terp721_updatable, contract_vending_factory,
+    contract_cw721_base, contract_cw721_updatable, contract_vending_factory,
     contract_vending_minter,
 };
 use crate::common_setup::msg::MinterCollectionResponse;
@@ -10,7 +10,7 @@ use cosmwasm_std::{coin, coins, to_json_binary, Addr};
 use cw_multi_test::{AppResponse, Executor};
 use factory_utils::msg::CreateMinterMsg;
 use factory_utils::msg::{CollectionParams, FactoryUtilsExecuteMsg};
-use terp_multi_test::TerpApp;
+
 use terp_sdk::NATIVE_DENOM;
 use vending_factory::msg::{VendingMinterInitMsgExtension, VendingUpdateParamsExtension};
 
@@ -41,7 +41,7 @@ pub fn setup_minter_contract(setup_params: MinterSetupParams) -> MinterCollectio
     let minter_code_id = setup_params.minter_code_id;
     let router = setup_params.router;
     let factory_code_id = setup_params.factory_code_id;
-    let terp721_code_id = setup_params.terp721_code_id;
+    let cw721_code_id = setup_params.cw721_code_id;
     let minter_admin = setup_params.minter_admin;
     let num_tokens = setup_params.num_tokens;
     let splits_addr = setup_params.splits_addr;
@@ -68,7 +68,7 @@ pub fn setup_minter_contract(setup_params: MinterSetupParams) -> MinterCollectio
         .unwrap();
     let mut msg = mock_create_minter(splits_addr, collection_params, start_time);
     msg.init_msg = build_init_msg(init_msg, msg.clone(), num_tokens);
-    msg.collection_params.code_id = terp721_code_id;
+    msg.collection_params.code_id = cw721_code_id;
     msg.collection_params.info.creator = minter_admin.to_string();
     let creation_fee = coins(CREATION_FEE, NATIVE_DENOM);
     let msg = FactoryUtilsExecuteMsg::CreateMinter(msg);
@@ -84,12 +84,12 @@ pub fn vending_minter_code_ids(router: &mut TerpApp) -> CodeIds {
     let factory_code_id = router.store_code(contract_vending_factory());
     println!("factory_code_id: {factory_code_id}");
 
-    let terp721_code_id = router.store_code(contract_terp721_base());
-    println!("terp721_code_id: {terp721_code_id}");
+    let cw721_code_id = router.store_code(contract_cw721_base());
+    println!("cw721_code_id: {cw721_code_id}");
     CodeIds {
         minter_code_id,
         factory_code_id,
-        terp721_code_id,
+        cw721_code_id,
     }
 }
 
@@ -100,12 +100,12 @@ pub fn vending_minter_updatable_code_ids(router: &mut TerpApp) -> CodeIds {
     let factory_code_id = router.store_code(contract_vending_factory());
     println!("factory_code_id: {factory_code_id}");
 
-    let terp721_code_id = router.store_code(contract_terp721_updatable());
-    println!("terp721_code_id: {terp721_code_id}");
+    let cw721_code_id = router.store_code(contract_cw721_updatable());
+    println!("cw721_code_id: {cw721_code_id}");
     CodeIds {
         minter_code_id,
         factory_code_id,
-        terp721_code_id,
+        cw721_code_id,
     }
 }
 
@@ -126,7 +126,7 @@ pub fn configure_minter(
             splits_addr: minter_instantiate_params_vec[index].splits_addr.clone(),
             minter_code_id: code_ids.minter_code_id,
             factory_code_id: code_ids.factory_code_id,
-            terp721_code_id: code_ids.terp721_code_id,
+            cw721_code_id: code_ids.cw721_code_id,
             start_time: minter_instantiate_params_vec[index].start_time,
             init_msg: minter_instantiate_params_vec[index].init_msg.clone(),
         };
@@ -147,9 +147,9 @@ pub fn sudo_update_params(
         let update_msg = match update_msg.clone() {
             Some(some_update_message) => some_update_message,
             None => factory_utils::msg::UpdateMinterParamsMsg {
-                code_id: Some(code_ids.terp721_code_id),
-                add_terp721_code_ids: None,
-                rm_terp721_code_ids: None,
+                code_id: Some(code_ids.cw721_code_id),
+                add_cw721_code_ids: None,
+                rm_cw721_code_ids: None,
                 frozen: None,
                 creation_fee: Some(coin(0, NATIVE_DENOM)),
                 min_mint_price: Some(coin(MIN_MINT_PRICE, NATIVE_DENOM)),

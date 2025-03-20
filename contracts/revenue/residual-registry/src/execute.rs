@@ -8,10 +8,12 @@ use crate::{
     },
 };
 
-use cosmwasm_std::{attr, ensure, Addr, Decimal, DepsMut, Env, Event, MessageInfo};
+use cosmwasm_std::{
+    attr, ensure, Addr, Decimal, DepsMut, Empty, Env, Event, MessageInfo, Response,
+};
+use cw721::msg::CollectionInfoAndExtensionResponse;
+use cw721_base::msg::QueryMsg as cw721QueryMsg;
 use cw_utils::{maybe_addr, nonpayable};
-use terp721_base::msg::{CollectionInfoResponse, QueryMsg as Terp721QueryMsg};
-use terp_sdk::Response;
 
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
@@ -106,41 +108,43 @@ pub fn execute_initialize_collection_residual(
         )
     );
 
-    let collection_info: CollectionInfoResponse = deps
-        .querier
-        .query_wasm_smart(collection.clone(), &Terp721QueryMsg::CollectionInfo {})?;
-
-    if let Some(residual_info) = collection_info.residual_info {
-        let residual_entry = ResidualEntry {
-            recipient: deps.api.addr_validate(&residual_info.payment_address)?,
-            share: residual_info.share,
-            updated: None,
-        };
-
-        residual_entry.validate()?;
-
-        RESIDUAL_DEFAULT.save(
-            deps.storage,
+    let collection_info: CollectionInfoAndExtensionResponse<Empty> =
+        deps.querier.query_wasm_smart(
             collection.clone(),
-            &ResidualDefault {
-                collection: collection.clone(),
-                residual_entry,
-            },
+            &cw721QueryMsg::GetCollectionInfoAndExtension {},
         )?;
 
-        response = response.add_event(Event::new("initialize-collection-residual").add_attributes(
-            vec![
-                attr("collection", collection.to_string()),
-                attr("recipient", residual_info.payment_address.to_string()),
-                attr("share", residual_info.share.to_string()),
-                attr("updated", env.block.time.to_string()),
-            ],
-        ));
-    } else {
-        return Err(ContractError::InvalidCollectionResidual(
-            "Collection contract residuals not found".to_string(),
-        ));
-    }
+    // if let Some(residual_info) = collection_info.residual_info {
+    //     let residual_entry = ResidualEntry {
+    //         recipient: deps.api.addr_validate(&residual_info.payment_address)?,
+    //         share: residual_info.share,
+    //         updated: None,
+    //     };
+
+    //     residual_entry.validate()?;
+
+    //     RESIDUAL_DEFAULT.save(
+    //         deps.storage,
+    //         collection.clone(),
+    //         &ResidualDefault {
+    //             collection: collection.clone(),
+    //             residual_entry,
+    //         },
+    //     )?;
+
+    //     response = response.add_event(Event::new("initialize-collection-residual").add_attributes(
+    //         vec![
+    //             attr("collection", collection.to_string()),
+    //             attr("recipient", residual_info.payment_address.to_string()),
+    //             attr("share", residual_info.share.to_string()),
+    //             attr("updated", env.block.time.to_string()),
+    //         ],
+    //     ));
+    // } else {
+    //     return Err(ContractError::InvalidCollectionResidual(
+    //         "Collection contract residuals not found".to_string(),
+    //     ));
+    // }
 
     Ok(response)
 }
@@ -179,14 +183,14 @@ pub fn execute_set_collection_residual_default(
 
     RESIDUAL_DEFAULT.save(deps.storage, collection.clone(), &residual_default)?;
 
-    response = response.add_event(Event::new("set-collection-residual-default").add_attributes(
-        vec![
+    response = response.add_event(
+        Event::new("set-collection-residual-default").add_attributes(vec![
             attr("collection", collection.to_string()),
             attr("recipient", recipient.to_string()),
             attr("share", share.to_string()),
             attr("updated", env.block.time.to_string()),
-        ],
-    ));
+        ]),
+    );
 
     Ok(response)
 }
@@ -209,7 +213,9 @@ pub fn execute_update_collection_residual_default(
     let mut residual_default = RESIDUAL_DEFAULT
         .load(deps.storage, collection.clone())
         .map_err(|_| {
-            ContractError::InvalidCollectionResidual("Collection residual does not exist".to_string())
+            ContractError::InvalidCollectionResidual(
+                "Collection residual does not exist".to_string(),
+            )
         })?;
 
     if let Some(updated) = residual_default.residual_entry.updated {
@@ -317,7 +323,9 @@ pub fn execute_update_collection_residual_protocol(
     let mut residual_protocol = ROYALTY_PROTOCOLS
         .load(deps.storage, residual_protocol_key.clone())
         .map_err(|_| {
-            ContractError::InvalidCollectionResidual("Collection residual does not exist".to_string())
+            ContractError::InvalidCollectionResidual(
+                "Collection residual does not exist".to_string(),
+            )
         })?;
 
     if let Some(updated) = residual_protocol.residual_entry.updated {

@@ -49,7 +49,7 @@ fn zero_mint_price() {
         splits_addr: minter_params.splits_addr,
         minter_code_id: code_ids.minter_code_id,
         factory_code_id: code_ids.factory_code_id,
-        terp721_code_id: code_ids.terp721_code_id,
+        cw721_code_id: code_ids.cw721_code_id,
         start_time: minter_params.start_time,
         init_msg: minter_params.init_msg,
     };
@@ -57,7 +57,7 @@ fn zero_mint_price() {
     let minter_code_id = setup_params.minter_code_id;
     let router = setup_params.router;
     let factory_code_id = setup_params.factory_code_id;
-    let terp721_code_id = setup_params.terp721_code_id;
+    let cw721_code_id = setup_params.cw721_code_id;
     let minter_admin = setup_params.minter_admin;
 
     let mut params = mock_params(None);
@@ -78,7 +78,7 @@ fn zero_mint_price() {
     let mut init_msg = mock_init_extension(None, None);
     init_msg.mint_price = coin(MINT_PRICE, NATIVE_DENOM);
     let mut msg = mock_create_minter_init_msg(mock_collection_params(), init_msg);
-    msg.collection_params.code_id = terp721_code_id;
+    msg.collection_params.code_id = cw721_code_id;
     msg.collection_params.info.creator = minter_admin.to_string();
     let creation_fee = coins(CREATION_FEE, NATIVE_DENOM);
     let msg = FactoryUtilsExecuteMsg::CreateMinter(msg);
@@ -90,7 +90,7 @@ fn zero_mint_price() {
 
     // Mint succeeds
     let minter_addr = Addr::unchecked("contract1");
-    let terp721 = Addr::unchecked("contract2");
+    let cw721 = Addr::unchecked("contract2");
     let mint_msg = ExecuteMsg::Mint {};
     let res = router.execute_contract(buyer.clone(), minter_addr, &mint_msg, &[]);
     assert!(res.is_ok());
@@ -99,8 +99,8 @@ fn zero_mint_price() {
     let res: TokensResponse = router
         .wrap()
         .query_wasm_smart(
-            terp721,
-            &terp721_base::msg::QueryMsg::Tokens {
+            cw721,
+            &cw721_base::msg::QueryMsg::Tokens {
                 owner: buyer.to_string(),
                 start_after: None,
                 limit: None,
@@ -139,7 +139,7 @@ fn zero_wl_mint_price() {
         splits_addr: minter_params.splits_addr,
         minter_code_id: code_ids.minter_code_id,
         factory_code_id: code_ids.factory_code_id,
-        terp721_code_id: code_ids.terp721_code_id,
+        cw721_code_id: code_ids.cw721_code_id,
         start_time: minter_params.start_time,
         init_msg: minter_params.init_msg,
     };
@@ -147,7 +147,7 @@ fn zero_wl_mint_price() {
     let minter_code_id = setup_params.minter_code_id;
     let router = setup_params.router;
     let factory_code_id = setup_params.factory_code_id;
-    let terp721_code_id = setup_params.terp721_code_id;
+    let cw721_code_id = setup_params.cw721_code_id;
     let minter_admin = setup_params.minter_admin;
 
     let mut params = mock_params(None);
@@ -168,7 +168,7 @@ fn zero_wl_mint_price() {
     let mut init_msg = mock_init_extension(None, None);
     init_msg.mint_price = coin(MINT_PRICE, NATIVE_DENOM);
     let mut msg = mock_create_minter_init_msg(mock_collection_params(), init_msg);
-    msg.collection_params.code_id = terp721_code_id;
+    msg.collection_params.code_id = cw721_code_id;
     msg.collection_params.info.creator = minter_admin.to_string();
     let creation_fee = coins(CREATION_FEE, NATIVE_DENOM);
     let msg = FactoryUtilsExecuteMsg::CreateMinter(msg);
@@ -236,7 +236,7 @@ fn zero_wl_mint_errs_with_min_mint_factory() {
         splits_addr: minter_params.splits_addr,
         minter_code_id: code_ids.minter_code_id,
         factory_code_id: code_ids.factory_code_id,
-        terp721_code_id: code_ids.terp721_code_id,
+        cw721_code_id: code_ids.cw721_code_id,
         start_time: minter_params.start_time,
         init_msg: minter_params.init_msg,
     };
@@ -244,7 +244,7 @@ fn zero_wl_mint_errs_with_min_mint_factory() {
     let minter_code_id = setup_params.minter_code_id;
     let router = setup_params.router;
     let factory_code_id = setup_params.factory_code_id;
-    let terp721_code_id = setup_params.terp721_code_id;
+    let cw721_code_id = setup_params.cw721_code_id;
     let minter_admin = setup_params.minter_admin;
 
     let mut params = mock_params(None);
@@ -265,7 +265,7 @@ fn zero_wl_mint_errs_with_min_mint_factory() {
     let mut init_msg = mock_init_extension(None, None);
     init_msg.mint_price = coin(min_mint_price, NATIVE_DENOM);
     let mut msg = mock_create_minter_init_msg(mock_collection_params(), init_msg);
-    msg.collection_params.code_id = terp721_code_id;
+    msg.collection_params.code_id = cw721_code_id;
     msg.collection_params.info.creator = minter_admin.to_string();
     let creation_fee = coins(CREATION_FEE, NATIVE_DENOM);
     let msg = FactoryUtilsExecuteMsg::CreateMinter(msg);

@@ -1,5 +1,5 @@
 use cosmwasm_std::Addr;
-use terp_multi_test::TerpApp;
+
 
 pub struct InstantiateParams<'a> {
     pub addresses: Vec<String>,

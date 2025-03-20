@@ -1,6 +1,6 @@
 use cosmwasm_std::{Addr, Decimal};
 use cw_multi_test::{Contract, ContractWrapper, Executor};
-use terp_multi_test::TerpApp;
+
 use terp_sdk::TerpMsgWrapper;
 
 pub fn contract_residual_registry() -> Box<dyn Contract<TerpMsgWrapper>> {

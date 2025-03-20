@@ -2,7 +2,7 @@ use cosmwasm_std::{
     to_json_binary, Addr, CosmosMsg, Decimal, Deps, DepsMut, Env, MessageInfo,
      Response,  Uint128, WasmMsg, 
 };
-use cw721::Cw721ExecuteMsg;
+use cw721::msg::Cw721ExecuteMsg;
 use terp_marketplace_utils::auction::{AuctionType, Bid, ExecuteMsg, Royalty};
 
 use crate::error::ContractError;

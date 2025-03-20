@@ -1,5 +1,5 @@
 [package]
-name        = "terp721"
+name        = "cw721"
 authors     = ["Shane Vitarana <s@noreply.publicawsome.com>"]
 description = "Terp Basic NFT Collection Interface"
 version     = { workspace = true }

@@ -1,7 +1,7 @@
 use cosmwasm_std::{coins, Addr, Coin, Timestamp, Uint128};
 use cw4::Member;
 use cw_multi_test::{BankSudo, Executor, SudoMsg};
-use terp_multi_test::TerpApp;
+
 use terp_sdk::NATIVE_DENOM;
 
 use crate::common_setup::contract_boxes::contract_group;

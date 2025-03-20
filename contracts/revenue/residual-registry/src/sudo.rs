@@ -2,8 +2,8 @@ use crate::error::ContractError;
 use crate::msg::SudoMsg;
 use crate::state::Config;
 
-use cosmwasm_std::{DepsMut, Env, Event};
-use terp_sdk::Response;
+use cosmwasm_std::{DepsMut, Env, Event, Response};
+
 
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;

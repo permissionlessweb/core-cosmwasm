@@ -111,9 +111,9 @@ fn test_create_minter(chain: &mut Chain) {
         .res
         .find_event_tags("instantiate".to_string(), "_contract_address".to_string());
 
-    let (minter_addr, terp721_addr) = (tags[0].value.to_string(), tags[1].value.to_string());
+    let (minter_addr, cw721_addr) = (tags[0].value.to_string(), tags[1].value.to_string());
     assert!(!minter_addr.trim().is_empty());
-    assert!(!terp721_addr.trim().is_empty());
+    assert!(!cw721_addr.trim().is_empty());
 
     // generate 200 user keys and send them all enough money to each mint 50 tokens + gas
     let users = gen_users(chain, 200, MINT_PRICE * 52, None);
@@ -257,9 +257,9 @@ fn test_start_trading_time(chain: &mut Chain) {
         .res
         .find_event_tags("instantiate".to_string(), "_contract_address".to_string());
 
-    let (minter_addr, terp721_addr) = (tags[0].value.clone(), tags[1].value.clone());
+    let (minter_addr, cw721_addr) = (tags[0].value.clone(), tags[1].value.clone());
     assert!(!minter_addr.trim().is_empty());
-    assert!(!terp721_addr.trim().is_empty());
+    assert!(!cw721_addr.trim().is_empty());
 
     let mut total_mints = 0;
     let mut total_fairburn_fees = 0;

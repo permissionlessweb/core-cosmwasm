@@ -76,14 +76,12 @@ e2e-watch: deploy-local-arm
 
 publish:
 	cd packages/utils/terp-sdk && cargo publish && cd ../..
-	cd packages/utils/terp-multi-test && cargo publish && cd ../..
 	cd packages/utils/test-suite && cargo publish && cd ../..
 	cd packages/utils/unit-tests && cargo publish && cd ../..
 	cd packages/revenue/terp-fee && cargo publish && cd ../..
 	cd packages/nft/factory-utils && cargo publish && cd ../..
 	cd packages/nft/minter-utils && cargo publish && cd ../..
 	cd packages/nft/terp-metadata && cargo publish && cd ../..
-	cd packages/nft/terp721 && cargo publish && cd ../..
 	cd packages/actions/controllers && cargo publish && cd ../..
 	cd packages/actions/ethereum-verify && cargo publish && cd ../..
 	cd packages/actions/mint-hooks && cargo publish && cd ../..

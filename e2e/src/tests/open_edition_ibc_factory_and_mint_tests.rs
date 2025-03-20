@@ -207,9 +207,9 @@ fn test_create_open_edition_ibc_minter(chain: &mut Chain) {
         .res
         .find_event_tags("instantiate".to_string(), "_contract_address".to_string());
 
-    let (minter_addr, terp721_addr) = (tags[0].value.to_string(), tags[1].value.to_string());
+    let (minter_addr, cw721_addr) = (tags[0].value.to_string(), tags[1].value.to_string());
     assert!(!minter_addr.trim().is_empty());
-    assert!(!terp721_addr.trim().is_empty());
+    assert!(!cw721_addr.trim().is_empty());
 
     // generate 10 user keys and send them all enough money to each mint 10 tokens (max)
     let users = gen_users(

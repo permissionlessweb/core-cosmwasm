@@ -5,7 +5,7 @@ use crate::msg::{
     StartTimeResponse, TotalMintCountResponse,
 };
 use crate::state::{
-    increment_token_index, Config, ConfigExtension, CONFIG, MINTER_ADDRS, TERP721_ADDRESS, STATUS,
+    increment_token_index, Config, ConfigExtension, CONFIG, MINTER_ADDRS, cw721_ADDRESS, STATUS,
     TOTAL_MINT_COUNT,
 };
 #[cfg(not(feature = "library"))]
@@ -22,7 +22,7 @@ use semver::Version;
 use terp_fee::{checked_fair_burn, ibc_denom_fair_burn};
 use factory_utils::query::FactoryUtilsQueryMsg;
 use minter_utils::{Status, StatusResponse, SudoMsg};
-use terp721::{ExecuteMsg as Terp721ExecuteMsg, InstantiateMsg as Sg721InstantiateMsg};
+use cw721::{ExecuteMsg as cw721ExecuteMsg, InstantiateMsg as Sg721InstantiateMsg};
 use terp_sdk::{TerpMsgWrapper, NATIVE_DENOM};
 use url::Url;
 
@@ -33,7 +33,7 @@ pub type SubMsg = cosmwasm_std::SubMsg<TerpMsgWrapper>;
 const CONTRACT_NAME: &str = "crates.io:terp-open-edition-minter";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-const INSTANTIATE_TERP721_REPLY_ID: u64 = 1;
+const INSTANTIATE_cw721_REPLY_ID: u64 = 1;
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
@@ -134,7 +134,7 @@ pub fn instantiate(
     // Init the minted tokens count
     TOTAL_MINT_COUNT.save(deps.storage, &0)?;
 
-    // Submessage to instantiate terp721 contract
+    // Submessage to instantiate cw721 contract
     let submsg = SubMsg {
         msg: WasmMsg::Instantiate {
             code_id: msg.collection_params.code_id,
@@ -146,10 +146,10 @@ pub fn instantiate(
             })?,
             funds: info.funds,
             admin: Some(config.extension.admin.to_string()),
-            label: format!("TERP721-{}", msg.collection_params.name.trim()),
+            label: format!("cw721-{}", msg.collection_params.name.trim()),
         }
         .into(),
-        id: INSTANTIATE_TERP721_REPLY_ID,
+        id: INSTANTIATE_cw721_REPLY_ID,
         gas_limit: None,
         reply_on: ReplyOn::Success,
     };
@@ -274,7 +274,7 @@ fn _execute_mint(
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
 
-    let terp721_address = TERP721_ADDRESS.load(deps.storage)?;
+    let cw721_address = cw721_ADDRESS.load(deps.storage)?;
 
     let recipient_addr = match recipient {
         Some(some_recipient) => some_recipient,
@@ -340,7 +340,7 @@ fn _execute_mint(
 
     // Create mint msg -> dependents on the NFT data type
     let msg = mint_nft_msg(
-        terp721_address,
+        cw721_address,
         token_id.clone(),
         recipient_addr.clone(),
         match config.extension.nft_data.nft_data_type {
@@ -532,7 +532,7 @@ pub fn execute_update_start_trading_time(
 ) -> Result<Response, ContractError> {
     nonpayable(&info)?;
     let config = CONFIG.load(deps.storage)?;
-    let terp721_contract_addr = TERP721_ADDRESS.load(deps.storage)?;
+    let cw721_contract_addr = cw721_ADDRESS.load(deps.storage)?;
 
     if info.sender != config.extension.admin {
         return Err(ContractError::Unauthorized(
@@ -565,10 +565,10 @@ pub fn execute_update_start_trading_time(
         }
     }
 
-    // execute terp721 contract
+    // execute cw721 contract
     let msg = WasmMsg::Execute {
-        contract_addr: terp721_contract_addr.to_string(),
-        msg: to_json_binary(&Terp721ExecuteMsg::<Empty, Empty>::UpdateStartTradingTime(
+        contract_addr: cw721_contract_addr.to_string(),
+        msg: to_json_binary(&cw721ExecuteMsg::<Empty, Empty>::UpdateStartTradingTime(
             start_time,
         ))?,
         funds: vec![],
@@ -683,7 +683,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 
 fn query_config(deps: Deps) -> StdResult<ConfigResponse> {
     let config = CONFIG.load(deps.storage)?;
-    let terp721_address = TERP721_ADDRESS.load(deps.storage)?;
+    let cw721_address = cw721_ADDRESS.load(deps.storage)?;
 
     Ok(ConfigResponse {
         admin: config.extension.admin.to_string(),
@@ -691,8 +691,8 @@ fn query_config(deps: Deps) -> StdResult<ConfigResponse> {
         payment_address: config.extension.payment_address,
         per_address_limit: config.extension.per_address_limit,
         end_time: config.extension.end_time,
-        terp721_address: terp721_address.to_string(),
-        terp721_code_id: config.collection_code_id,
+        cw721_address: cw721_address.to_string(),
+        cw721_code_id: config.collection_code_id,
         start_time: config.extension.start_time,
         mint_price: config.mint_price,
         factory: config.factory.to_string(),
@@ -758,18 +758,18 @@ fn query_mint_price(deps: Deps) -> StdResult<MintPriceResponse> {
 // Reply callback triggered from cw721 contract instantiation
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
-    if msg.id != INSTANTIATE_TERP721_REPLY_ID {
+    if msg.id != INSTANTIATE_cw721_REPLY_ID {
         return Err(ContractError::InvalidReplyID {});
     }
 
     let reply = parse_reply_instantiate_data(msg);
     match reply {
         Ok(res) => {
-            let terp721_address = res.contract_address;
-            TERP721_ADDRESS.save(deps.storage, &Addr::unchecked(terp721_address.clone()))?;
+            let cw721_address = res.contract_address;
+            cw721_ADDRESS.save(deps.storage, &Addr::unchecked(cw721_address.clone()))?;
             Ok(Response::default()
-                .add_attribute("action", "instantiate_terp721_reply")
-                .add_attribute("terp721_address", terp721_address))
+                .add_attribute("action", "instantiate_cw721_reply")
+                .add_attribute("cw721_address", cw721_address))
         }
         Err(_) => Err(ContractError::InstantiateSg721Error {}),
     }

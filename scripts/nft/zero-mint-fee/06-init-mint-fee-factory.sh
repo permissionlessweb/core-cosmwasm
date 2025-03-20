@@ -10,7 +10,7 @@ MSG=$(cat <<EOF
 {
   "params": {
     "code_id": $MINTER_CODE_ID,
-    "allowed_terp721_code_ids": [1979],
+    "allowed_cw721_code_ids": [1979],
     "frozen": false,
     "creation_fee": {"amount": "5000000000", "denom": "uthiolx"},
     "min_mint_price": {"amount": "50000000", "denom": "uthiolx"},

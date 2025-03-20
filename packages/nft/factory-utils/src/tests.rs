@@ -1,7 +1,7 @@
 use crate::msg::CollectionParams;
 use cosmwasm_std::Decimal;
 use cosmwasm_std::Timestamp;
-use terp721::{CollectionInfo, ResidualInfoResponse};
+use cw721::{CollectionInfo, ResidualInfoResponse};
 
 pub fn mock_collection_params() -> CollectionParams {
     CollectionParams {

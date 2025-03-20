@@ -2,7 +2,7 @@
 mod tests {
     use cosmwasm_std::Addr;
     use cw_multi_test::Executor;
-    use terp_multi_test::TerpApp;
+    
     use earlybird_immutable::msg::*;
     use earlybird_immutable::{helpers::EarlybirdImmutableContract, state::Config};
 

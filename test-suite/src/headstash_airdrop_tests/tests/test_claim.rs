@@ -11,7 +11,7 @@ use headstash_airdrop::msg::{ExecuteMsg, QueryMsg};
 
 use ethers_core::rand::thread_rng;
 use ethers_signers::{LocalWallet, Signer};
-use terp_multi_test::TerpApp;
+
 
 use crate::headstash_airdrop::constants::claim_constants::{
     CONFIG_PLAINTEXT, MOCK_AIRDROP_ADDR_STR, MOCK_MINTER_ADDR_STR, NATIVE_DENOM, OWNER,

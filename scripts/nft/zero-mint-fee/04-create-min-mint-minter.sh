@@ -1,6 +1,6 @@
 KEY=$(terpd keys show $ADMIN | jq -r .name)
 FACTORY=
-TERP721_CODE_ID=
+cw721_CODE_ID=
 
 # init msg
 # VendingMinterInitMsgExtension {
@@ -44,7 +44,7 @@ MSG=$(cat <<EOF
             "per_address_limit": 30
         },
         "collection_params": {
-            "code_id": $TERP721_CODE_ID,
+            "code_id": $cw721_CODE_ID,
             "name": "Test Collection yubo",
             "symbol": "YUBO",
             "info": {

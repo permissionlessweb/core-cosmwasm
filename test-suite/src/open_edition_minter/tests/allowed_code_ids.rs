@@ -35,7 +35,7 @@ fn invalid_code_id() {
     );
     let mut app = custom_mock_app();
     let mut code_ids = open_edition_minter_code_ids(&mut app);
-    code_ids.terp721_code_id = 19;
+    code_ids.cw721_code_id = 19;
     let vt =
         open_edition_minter_custom_code_ids(app, params_extension, init_msg, code_ids).unwrap();
     assert_eq!(

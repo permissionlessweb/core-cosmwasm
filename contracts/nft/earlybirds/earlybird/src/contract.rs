@@ -1,3 +1,6 @@
+#[cfg(not(feature = "library"))]
+use cosmwasm_std::entry_point;
+
 use crate::admin::{
     can_execute, execute_freeze, execute_update_admins, query_admin_list, query_can_execute,
 };
@@ -9,9 +12,8 @@ use crate::msg::{
     RemoveMembersMsg,
 };
 use crate::state::{AdminList, Config, ADMIN_LIST, CONFIG, EARLYBIRD};
-#[cfg(not(feature = "library"))]
-use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, StdResult};
+
+use cosmwasm_std::{to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cosmwasm_std::{Order, Timestamp};
 use cw2::set_contract_version;
 use cw_storage_plus::Bound;
@@ -19,7 +21,7 @@ use cw_utils::{may_pay, maybe_addr, must_pay};
 use rust_decimal::prelude::ToPrimitive;
 use rust_decimal::Decimal;
 use terp_fee::checked_fair_burn;
-use terp_sdk::{Response, GENESIS_MINT_START_TIME, NATIVE_DENOM};
+use terp_sdk::{ GENESIS_MINT_START_TIME, NATIVE_DENOM};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:earlybird";

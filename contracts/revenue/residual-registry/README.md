@@ -1,6 +1,6 @@
 # Terp Residual Registry
 
-The Terp Residual Registry contract is a CosmWasm smart contract deployed on the Terp chain. It allows NFT collection admins to define the residuals that should be paid to them when their NFTs are sold on the Terp chain. The residual registry logic is applied as described below.
+The Terp Residual Registry contract is a CosmWasm smart contract deployed on the Terp chain. It allows NFT collection admins to define the residuals that should be paid to them when their NFTs  
 
 ## Residual Registry Logic
 

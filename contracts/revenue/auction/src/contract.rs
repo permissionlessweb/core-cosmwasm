@@ -2,8 +2,10 @@ use cosmwasm_std::{
     entry_point, from_json, to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response,
     StdError, StdResult, Uint128,
 };
-use cw721::Cw721ReceiveMsg;
-use terp_marketplace_utils::auction::{Cw721HookMsg, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
+use cw721::msg::Cw721ReceiveMsg;
+use terp_marketplace_utils::auction::{
+    Cw721HookMsg, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg,
+};
 
 use crate::auction::{
     admin_cancel_auction, admin_change_config, admin_pause, admin_resume, cancel_auction,

@@ -1,16 +1,19 @@
 # Terp Network Core Cosmwasm Libraries
 
+## TODO: 
+- prep for us of v019 cw721 libraries
+- fix bugs
+- add cw-orch scripts 
+- add agreement based contracts
 This repository contains the core contracts and libraries that are shared among all Terp Network protocols.
+- replcae asset type used in market (removed terr import)
+
 
 | NFT Contracts                                                     | Description                                                                                      |
 |-------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
-| [Terp721 Base](./contracts/nft/collections/terp721-base/README.md)      | A base Terp NFT collection contract.                                                    |
-| [Terp721 Metadata-Onchain](./contracts/nft/collections/terp721-metadata-onchain/README.md)      | A contract extending TERP721 NFT to store metadata on chain.                                         |
-| [Terp721 Non-Transferable](./contracts/nft/collections/terp721-nt/README.md)      | A Terp Non-transferrable NFT collection contract.                                       |
-| [Terp721 Updatable](./contracts/nft/collections/terp721-updatable/README.md)      |                                                     |
-| [Earlybird](./contracts/nft/earlybirds/earlybird/README.md)      |                                                     |
+ | [Earlybird](./contracts/nft/earlybirds/earlybird/README.md)      |  Support to set a list of addresses that meet a requirement                                                   |
 | [Earlybird Flex](./contracts/nft/earlybirds/earlybird-flex/README.md)      |                                                     |
-| [Earlybird Immutable](./contracts/nft/earlybirds/earlybird-immutable/README.md)      |                                                     |
+| [Earlybird Immutable](./contracts/nft/earlybirds/earlybird-immutable/README.md)      | Once deployed, address in eb contract cannot be updated                                                    |
 | [Base Factory](./contracts/nft/factories/base-factory/README.md)      |                                                     |
 | [Open Edition Factory](./contracts/nft/factories/open-edition-factory/README.md)      |                                                     |
 | [Vending Factory](./contracts/nft/factories/vending-factory/README.md)      |                                                     |
@@ -35,7 +38,7 @@ ___
 | [Factory Utils](./packages/nft/factory-utils/README.md)      |      
 | [Minter Utils](./packages/nft/minter-utils/README.md)      |      
 | [Terp Metadata](./packages/nft/terp-metadata/README.md)      |      
-| [Terp721](./packages/nft/terp721/README.md)      |      
+| [cw721](./packages/nft/cw721/README.md)      |      
 | [Terp Fee](./packages/revenue/terp-fee/README.md)      |      
 | [Terp Multi Test](./packages/utils/terp-multi-test/README.md)      |      
 | [Terp SDK](./packages/utils/terp-sdk/README.md)      |      

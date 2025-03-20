@@ -11,7 +11,7 @@ use cosmwasm_std::{coins, Addr, Coin, Timestamp};
 use cw4::Member;
 use cw_multi_test::{next_block, Executor};
 use factory_utils::tests::mock_collection_params_1;
-use terp_multi_test::TerpApp;
+
 use terp_splits::msg::{ExecuteMsg as SplitsExecuteMsg, Group};
 use terp_sdk::{GENESIS_MINT_START_TIME, NATIVE_DENOM};
 

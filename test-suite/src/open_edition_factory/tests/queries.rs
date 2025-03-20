@@ -6,7 +6,7 @@ mod tests {
     use open_edition_factory::helpers::FactoryContract;
     use open_edition_factory::msg::InstantiateMsg;
     use open_edition_factory::state::OpenEditionMinterParams;
-    use terp_multi_test::TerpApp;
+    
 
     use crate::common_setup::contract_boxes::{contract_open_edition_factory, custom_mock_app};
     use crate::common_setup::setup_minter::open_edition_minter::mock_params::mock_params_proper;
@@ -52,8 +52,8 @@ mod tests {
                 .query_wasm_smart(factory_contract.0.to_string(), &query_config_msg)
                 .unwrap();
             assert_eq!(
-                res.params.allowed_terp721_code_ids,
-                params.allowed_terp721_code_ids
+                res.params.allowed_cw721_code_ids,
+                params.allowed_cw721_code_ids
             );
             assert_eq!(res.params.creation_fee, params.creation_fee);
             assert_eq!(res.params.code_id, params.code_id);
@@ -90,14 +90,14 @@ mod tests {
                 .wrap()
                 .query_wasm_smart(factory_contract.0.to_string(), &query_config_msg)
                 .unwrap();
-            assert_eq!(res.code_ids, params.allowed_terp721_code_ids);
+            assert_eq!(res.code_ids, params.allowed_cw721_code_ids);
         }
 
         #[test]
         fn query_allowed_collection_code_id_test() {
             let (app, factory_contract, params) = proper_instantiate();
             // Valid code id
-            assert!(params.allowed_terp721_code_ids.contains(&1u64));
+            assert!(params.allowed_cw721_code_ids.contains(&1u64));
             let query_config_msg = factory_utils::query::FactoryUtilsQueryMsg::AllowedCollectionCodeId(1);
             let res: AllowedCollectionCodeIdResponse = app
                 .wrap()
@@ -106,7 +106,7 @@ mod tests {
             assert!(res.allowed);
 
             // Invalid code id
-            assert!(!params.allowed_terp721_code_ids.contains(&11u64));
+            assert!(!params.allowed_cw721_code_ids.contains(&11u64));
             let query_config_msg = factory_utils::query::FactoryUtilsQueryMsg::AllowedCollectionCodeId(11);
             let res: AllowedCollectionCodeIdResponse = app
                 .wrap()

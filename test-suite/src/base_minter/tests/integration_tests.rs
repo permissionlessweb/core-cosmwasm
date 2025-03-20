@@ -1,9 +1,9 @@
-use crate::common_setup::contract_boxes::contract_terp721_base;
+use crate::common_setup::contract_boxes::contract_cw721_base;
 use crate::common_setup::setup_accounts_and_block::{CREATION_FEE, INITIAL_BALANCE};
 use crate::common_setup::setup_minter::base_minter::mock_params::mock_params;
 use crate::common_setup::setup_minter::common::constants::MIN_MINT_PRICE;
 use crate::common_setup::templates::{
-    base_minter_with_terp721, base_minter_with_terp721nt, base_minter_with_specified_terp721,
+    base_minter_with_cw721, base_minter_with_cw721nt, base_minter_with_specified_cw721,
 };
 use base_factory::msg::{BaseMinterCreateMsg, BaseUpdateParamsMsg, SudoMsg};
 
@@ -15,31 +15,31 @@ use factory_utils::msg::FactoryUtilsExecuteMsg;
 use factory_utils::query::{AllowedCollectionCodeIdsResponse, FactoryUtilsQueryMsg};
 use factory_utils::tests::mock_collection_params_1;
 use minter_utils::QueryMsg;
-use terp721_base::msg::{CollectionInfoResponse, QueryMsg as Terp721QueryMsg};
+use cw721_base::msg::{CollectionInfoResponse, QueryMsg as cw721QueryMsg};
 use terp_sdk::{GENESIS_MINT_START_TIME, NATIVE_DENOM};
 
 #[test]
 fn init() {
-    let bmt = base_minter_with_terp721nt(1);
+    let bmt = base_minter_with_cw721nt(1);
     bmt.collection_response_vec[0].minter.clone().unwrap();
     bmt.collection_response_vec[0].collection.clone().unwrap();
 }
 
 #[test]
 fn update_code_id() {
-    let terp721_code_id = 7u64;
-    let bmt = base_minter_with_specified_terp721(1, terp721_code_id);
+    let cw721_code_id = 7u64;
+    let bmt = base_minter_with_specified_cw721(1, cw721_code_id);
     let (mut router, creator, _) = (bmt.router, bmt.accts.creator, bmt.accts.buyer);
     let factory = bmt.collection_response_vec[0].factory.clone().unwrap();
 
-    // terp721 code id not in allowed code ids
+    // cw721 code id not in allowed code ids
     let res = bmt.collection_response_vec[0].minter.clone();
     assert!(res.is_none());
 
-    // add terp721_code_id to allowed code ids
+    // add cw721_code_id to allowed code ids
     let update_msg = BaseUpdateParamsMsg {
-        add_terp721_code_ids: Some(vec![terp721_code_id]),
-        rm_terp721_code_ids: None,
+        add_cw721_code_ids: Some(vec![cw721_code_id]),
+        rm_cw721_code_ids: None,
         frozen: None,
         code_id: None,
         creation_fee: None,
@@ -57,17 +57,17 @@ fn update_code_id() {
         .wrap()
         .query_wasm_smart(factory.clone(), &msg)
         .unwrap();
-    assert!(res.code_ids.contains(&terp721_code_id));
+    assert!(res.code_ids.contains(&cw721_code_id));
 
-    // store terp721_base 4-7 code ids
-    for _ in 0..(terp721_code_id - 3) {
-        router.store_code(contract_terp721_base());
+    // store cw721_base 4-7 code ids
+    for _ in 0..(cw721_code_id - 3) {
+        router.store_code(contract_cw721_base());
     }
 
-    // create minter with terp721_code_id
+    // create minter with cw721_code_id
     let start_time = Timestamp::from_nanos(GENESIS_MINT_START_TIME);
     let mut collection_params = mock_collection_params_1(Some(start_time));
-    collection_params.code_id = terp721_code_id;
+    collection_params.code_id = cw721_code_id;
 
     let mut msg = BaseMinterCreateMsg {
         init_msg: None,
@@ -79,17 +79,17 @@ fn update_code_id() {
     let res = router.execute_contract(creator, factory, &msg, &creation_fee);
     assert!(res.is_ok());
 
-    // confirm new terp721 code id == terp721_code_id
+    // confirm new cw721 code id == cw721_code_id
     let res = router
         .wrap()
         .query_wasm_contract_info("contract2".to_string())
         .unwrap();
-    assert!(res.code_id == terp721_code_id);
+    assert!(res.code_id == cw721_code_id);
 }
 
 #[test]
 fn check_mint() {
-    let bmt = base_minter_with_terp721nt(1);
+    let bmt = base_minter_with_cw721nt(1);
     let (mut router, creator, buyer) = (bmt.router, bmt.accts.creator, bmt.accts.buyer);
     let minter_addr = bmt.collection_response_vec[0].minter.clone().unwrap();
     let collection_addr = bmt.collection_response_vec[0].collection.clone().unwrap();
@@ -165,7 +165,7 @@ fn check_mint() {
         .unwrap();
     assert_eq!(res.owner, creator.to_string());
 
-    // make sure terp721-nt cannot be transferred
+    // make sure cw721-nt cannot be transferred
     let transfer_msg = Cw721ExecuteMsg::TransferNft {
         recipient: "adsf".to_string(),
         token_id: "1".to_string(),
@@ -181,7 +181,7 @@ fn check_mint() {
 
 #[test]
 fn update_start_trading_time() {
-    let bmt = base_minter_with_terp721(1);
+    let bmt = base_minter_with_cw721(1);
     let (mut router, creator, buyer) = (bmt.router, bmt.accts.creator, bmt.accts.buyer);
     let minter_addr = bmt.collection_response_vec[0].minter.clone().unwrap();
     let collection_addr = bmt.collection_response_vec[0].collection.clone().unwrap();
@@ -221,7 +221,7 @@ fn update_start_trading_time() {
     // confirm trading start time
     let res: CollectionInfoResponse = router
         .wrap()
-        .query_wasm_smart(collection_addr, &Terp721QueryMsg::CollectionInfo {})
+        .query_wasm_smart(collection_addr, &cw721QueryMsg::CollectionInfo {})
         .unwrap();
     assert_eq!(res.start_trading_time, Some(default_start_trading_time));
 }

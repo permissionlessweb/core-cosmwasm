@@ -1,7 +1,7 @@
 use cosmwasm_std::{coins, Addr, Coin, StdResult};
 use cw_multi_test::SudoMsg as CwSudoMsg;
 use cw_multi_test::{BankSudo, SudoMsg};
-use terp_multi_test::TerpApp;
+
 use terp_sdk::NATIVE_DENOM;
 
 // all amounts in uterp

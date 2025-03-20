@@ -7,7 +7,7 @@ use cw2::set_contract_version;
 use crate::error::ContractError;
 use crate::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
 use cw_utils::nonpayable;
-use terp_sdk::Response;
+
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:earlybird-immutable";

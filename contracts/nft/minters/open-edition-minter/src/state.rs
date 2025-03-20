@@ -17,7 +17,7 @@ pub struct ConfigExtension {
 pub type Config = MinterConfig<ConfigExtension>;
 
 pub const CONFIG: Item<Config> = Item::new("config");
-pub const TERP721_ADDRESS: Item<Addr> = Item::new("terp721_address");
+pub const cw721_ADDRESS: Item<Addr> = Item::new("cw721_address");
 pub const MINTER_ADDRS: Map<&Addr, u32> = Map::new("ma");
 
 /// This keeps track of the mint count
