@@ -1,4 +1,4 @@
-use cosmwasm_std::{CheckedMultiplyRatioError, StdError, Timestamp};
+use cosmwasm_std::{CheckedMultiplyRatioError, Instantiate2AddressError, StdError, Timestamp};
 use cw_utils::PaymentError;
 use terp_fee::FeeError;
 use thiserror::Error;
@@ -14,6 +14,9 @@ pub enum ContractError {
 
     #[error("{0}")]
     ParseError(#[from] ParseError),
+
+    #[error("{0}")]
+    Instantiate2AddressError(#[from] Instantiate2AddressError),
 
     #[error("{0}")]
     CheckedMultiplyRatioError(#[from] CheckedMultiplyRatioError),

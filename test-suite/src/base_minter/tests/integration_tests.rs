@@ -19,14 +19,14 @@ use minter_utils::QueryMsg;
 use terp_sdk::{GENESIS_MINT_START_TIME, NATIVE_DENOM};
 
 #[test]
-fn init() {
+fn test_init() {
     let bmt = base_minter_with_cw721nt(1);
     bmt.collection_response_vec[0].minter.clone().unwrap();
     bmt.collection_response_vec[0].collection.clone().unwrap();
 }
 
 #[test]
-fn update_code_id() {
+fn test_update_code_id() {
     let cw721_code_id = 7u64;
     let bmt = base_minter_with_specified_cw721(1, cw721_code_id);
     let (mut router, creator, _) = (bmt.router, bmt.accts.creator, bmt.accts.buyer);
@@ -69,7 +69,7 @@ fn update_code_id() {
     let mut collection_params = mock_collection_params_1(Some(start_time));
     collection_params.code_id = cw721_code_id;
 
-    let mut msg = BaseMinterCreateMsg {
+    let msg = BaseMinterCreateMsg {
         init_msg: None,
         collection_params,
     };
@@ -77,7 +77,7 @@ fn update_code_id() {
     let creation_fee = coins(CREATION_FEE, NATIVE_DENOM);
     let msg = FactoryUtilsExecuteMsg::CreateMinter(msg);
     let res = router.execute_contract(creator, factory, &msg, &creation_fee);
-    assert!(res.is_ok());
+    res.unwrap();
 
     // confirm new cw721 code id == cw721_code_id
     let res = router
@@ -88,7 +88,7 @@ fn update_code_id() {
 }
 
 #[test]
-fn check_mint() {
+fn test_check_mint() {
     let bmt = base_minter_with_cw721nt(1);
     let (mut router, creator, buyer) = (bmt.router, bmt.accts.creator, bmt.accts.buyer);
     let minter_addr = bmt.collection_response_vec[0].minter.clone().unwrap();

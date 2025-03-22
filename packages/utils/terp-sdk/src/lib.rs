@@ -7,7 +7,7 @@ pub const TEST_BOND_DENOM: &str = "uterpx";
 pub const TEST_FEE_DENOM: &str = "uthiolx";
 pub const GENESIS_MINT_START_TIME: u64 = 1647032400000000000;
 
-use cosmwasm_std::{coin, coins, Addr, BankMsg, Coin, CosmosMsg};
+use cosmwasm_std::{coin, coins, Addr, BankMsg, Binary, Coin, CosmosMsg, HexBinary};
 // pub use msg::{TerpMsg, TerpMsgWrapper};
 
 // pub type Response = cosmwasm_std::Response;
@@ -69,4 +69,18 @@ pub fn send_thiols_msg(to_address: &Addr, amount: impl Into<u128>) -> BankMsg {
 
 pub fn create_fund_community_pool_msg(amount: Vec<Coin>) -> CosmosMsg {
     CosmosMsg::Bank(cosmwasm_std::BankMsg::Burn { amount }).into()
+}
+
+
+
+/// Generates the value used with instantiate2, via a hash of the infusers checksum.
+pub const SALT_POSTFIX: &[u8] = b"terpyterp";
+pub fn generate_instantiate_salt(checksum: &Binary, height: u64) -> Binary {
+    let mut hash = Vec::new();
+    hash.extend_from_slice(checksum.as_slice());
+    hash.extend_from_slice(&height.to_be_bytes());
+    let checksum_hash = <sha2::Sha256 as sha2::Digest>::digest(hash);
+    let mut result = checksum_hash.to_vec();
+    result.extend_from_slice(SALT_POSTFIX);
+    Binary::new(result.to_vec())
 }

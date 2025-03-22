@@ -27,6 +27,7 @@ incremental = false
 overflow-checks = true
 
 [features]
+library = []
 
 [dependencies]
 cosmwasm-schema  = { workspace = true }

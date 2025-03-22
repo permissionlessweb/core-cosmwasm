@@ -34,7 +34,7 @@ optimize = """docker run --rm -v "$(pwd)":/code \
 [dependencies]
 cosmwasm-schema       = { workspace = true }
 terp-sdk              = { workspace = true }
-cosmwasm-std          = { workspace = true }
+cosmwasm-std          = { workspace = true, features =["cosmwasm_1_2"] }
 cw4                   = { workspace = true }
 cw-multi-test         = { workspace = true }
 cw4-group             = { workspace = true }

@@ -11,11 +11,12 @@ use crate::validation::{check_dynamic_per_address_limit, get_three_percent_of_to
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    coin, ensure, to_json_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Decimal, Deps, DepsMut,
-    Empty, Env, Event, Fraction, MessageInfo, Order, Reply, ReplyOn, Response, StdError, StdResult,
-    SubMsg, Timestamp, Uint128, WasmMsg,
+    coin, ensure, instantiate2_address, to_json_binary, Addr, BankMsg, Binary, CanonicalAddr, Coin,
+    CosmosMsg, Decimal, Deps, DepsMut, Empty, Env, Event, Fraction, MessageInfo, Order, Reply,
+    ReplyOn, Response, StdError, StdResult, SubMsg, Timestamp, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
+use cw721::msg::CollectionExtensionMsg;
 use cw721_base::msg::{ExecuteMsg as cw721ExecuteMsg, InstantiateMsg as Cw721InstantiateMsg};
 use cw_utils::{may_pay, maybe_addr, nonpayable};
 use earlybird::msg::{
@@ -30,7 +31,7 @@ use sha2::{Digest, Sha256};
 use shuffle::{fy::FisherYates, shuffler::Shuffler};
 use std::convert::TryInto;
 use terp_fee::{checked_fair_burn, ibc_denom_fair_burn};
-use terp_sdk::{GENESIS_MINT_START_TIME, NATIVE_DENOM};
+use terp_sdk::{generate_instantiate_salt, GENESIS_MINT_START_TIME, NATIVE_DENOM};
 use url::Url;
 use vending_factory::msg::{ParamsResponse, VendingMinterCreateMsg};
 use vending_factory::state::VendingMinterParams;
@@ -43,7 +44,7 @@ pub struct TokenPositionMapping {
 const CONTRACT_NAME: &str = "crates.io:terp-minter";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-const INSTANTIATE_cw721_REPLY_ID: u64 = 1;
+const INSTANTIATE_CW721_REPLY_ID: u64 = 1;
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
@@ -171,28 +172,53 @@ pub fn instantiate(
         MINTABLE_TOKEN_POSITIONS.save(deps.storage, token_position, &token_id)?;
         token_position += 1;
     }
+    let collection_checksum = Binary::new(
+        deps.querier
+            .query_wasm_code_info(msg.collection_params.code_id)?
+            .checksum
+            .into(),
+    );
 
+    let salt1 = generate_instantiate_salt(&collection_checksum, env.block.height);
+
+    // predict the infused collection contract address
+    let infusion_addr = match instantiate2_address(
+        collection_checksum.as_slice(),
+        &deps.api.addr_canonicalize(env.contract.address.as_str())?,
+        salt1.as_slice(),
+    ) {
+        Ok(addr) => addr,
+        Err(err) => return Err(ContractError::from(err)),
+    };
     // Submessage to instantiate cw721 contract
     let submsg = SubMsg {
-        msg: WasmMsg::Instantiate {
+        msg: WasmMsg::Instantiate2 {
             code_id: msg.collection_params.code_id,
             msg: to_json_binary(&Cw721InstantiateMsg {
                 name: msg.collection_params.name.clone(),
                 symbol: msg.collection_params.symbol,
                 minter: Some(env.contract.address.to_string()),
-                collection_info_extension: todo!(), // collection_info,
-                creator: todo!(),
-                withdraw_address: todo!(),
+                creator: Some(info.sender.to_string()),
+                withdraw_address: None,
+                collection_info_extension: Some(CollectionExtensionMsg {
+                    description: msg.collection_params.info.description.clone(),
+                    image: collection_info.image.clone(),
+                    external_link: collection_info.external_link.clone(),
+                    explicit_content: collection_info.explicit_content.clone(),
+                    start_trading_time: start_trading_time.clone(),
+                    royalty_info: collection_info.royalty_info.clone(),
+                }),
             })?,
             funds: info.funds,
             admin: Some(config.extension.admin.to_string()),
             label: format!("cw721-{}", msg.collection_params.name.trim()),
+            salt: salt1.clone(),
         }
         .into(),
-        id: INSTANTIATE_cw721_REPLY_ID,
+        id: INSTANTIATE_CW721_REPLY_ID,
         gas_limit: None,
         reply_on: ReplyOn::Success,
-        payload: Binary::new(vec![]),
+        payload: infusion_addr.into(),
     };
 
     Ok(Response::new()
@@ -890,7 +916,7 @@ pub fn execute_update_start_trading_time(
 ) -> Result<Response, ContractError> {
     nonpayable(&info)?;
     let config = CONFIG.load(deps.storage)?;
-    let cw721_contract_addr = CW721_ADDRESS.load(deps.storage)?;
+    let _cw721_contract_addr = CW721_ADDRESS.load(deps.storage)?;
 
     if info.sender != config.extension.admin {
         return Err(ContractError::Unauthorized(
@@ -930,10 +956,10 @@ pub fn execute_update_start_trading_time(
     //     funds: vec![],
     // };
 
-    Ok(Response::new()
-        .add_attribute("action", "update_start_trading_time")
-        .add_attribute("sender", info.sender)
-        // .add_message(msg)
+    Ok(
+        Response::new()
+            .add_attribute("action", "update_start_trading_time")
+            .add_attribute("sender", info.sender), // .add_message(msg)
     )
 }
 
@@ -1205,12 +1231,18 @@ fn query_mint_price(deps: Deps) -> StdResult<MintPriceResponse> {
 
 // Reply callback triggered from cw721 contract instantiation
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
-    if msg.id != INSTANTIATE_cw721_REPLY_ID {
+pub fn reply(deps: DepsMut, _env: Env, reply: Reply) -> Result<Response, ContractError> {
+    if reply.id != INSTANTIATE_CW721_REPLY_ID {
         return Err(ContractError::InvalidReplyID {});
     }
+    let cw721_addr = deps
+        .api
+        .addr_humanize(&CanonicalAddr::from(reply.payload))?;
+    CW721_ADDRESS.save(deps.storage, &cw721_addr)?;
+    Ok(Response::new()
+        .add_attribute("action", "instantiate_cw721_reply")
+        .add_attribute("cw721_addr", cw721_addr))
 
-    Ok(Response::new())
     // let reply = parse_reply_instantiate_data(msg);
     // match reply {
     //     Ok(res) => {

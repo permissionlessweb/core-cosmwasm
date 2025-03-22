@@ -2,7 +2,6 @@ use cosmwasm_std::testing::{message_info, mock_env, MOCK_CONTRACT_ADDR};
 use cosmwasm_std::{
     to_json_binary, Addr, BankMsg, Coin, CosmosMsg, Decimal, DepsMut, Timestamp, Uint128, WasmMsg,
 };
-use cw721::msg::Cw721ExecuteMsg;
 use cw721::receiver::Cw721ReceiveMsg;
 
 use std::str::FromStr;

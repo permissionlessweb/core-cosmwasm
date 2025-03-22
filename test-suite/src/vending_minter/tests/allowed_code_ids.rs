@@ -75,7 +75,7 @@ fn update_code_id() {
     collection_params.code_id = cw721_code_id;
 
     let init_msg = mock_init_extension(None, None);
-    let mut msg = VendingMinterCreateMsg {
+    let msg = VendingMinterCreateMsg {
         init_msg,
         collection_params,
     };

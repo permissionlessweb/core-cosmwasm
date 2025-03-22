@@ -1,4 +1,4 @@
-use cosmwasm_std::{CheckedMultiplyRatioError, Coin, OverflowError, StdError, Timestamp};
+use cosmwasm_std::{CheckedMultiplyRatioError, Coin, Instantiate2AddressError, OverflowError, StdError, Timestamp};
 use cw_utils::PaymentError;
 use thiserror::Error;
 use url::ParseError;
@@ -18,6 +18,9 @@ pub enum ContractError {
 
     #[error("{0}")]
     OverflowError(#[from] OverflowError),
+
+    #[error("{0}")]
+    Instantiate2AddressError(#[from] Instantiate2AddressError),
 
     #[error("{0}")]
     CheckedMultiplyRatioError(#[from] CheckedMultiplyRatioError),

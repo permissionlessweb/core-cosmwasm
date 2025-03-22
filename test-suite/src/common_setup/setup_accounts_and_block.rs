@@ -26,9 +26,10 @@ pub fn instantiate_group(app: &mut App, members: Vec<Member>) -> Addr {
 
 // Add a creator account with initial balances
 pub fn setup_accounts(router: &mut App) -> (Addr, Addr) {
-    let buyer = Addr::unchecked("buyer");
-    let creator = Addr::unchecked("creator");
-    let dev = Addr::unchecked(DEV_ADDRESS);
+   
+    let buyer =  router.api().addr_make("buyer");
+    let creator =  router.api().addr_make("creator");;
+    let dev = router.api().addr_make("dev");
     // 3,000 tokens
     let creator_funds = coins(INITIAL_BALANCE + CREATION_FEE, NATIVE_DENOM);
     // 2,000 tokens
