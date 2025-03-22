@@ -1,6 +1,6 @@
 use cosmwasm_std::{coins, Addr, Coin, Timestamp, Uint128};
 use cw4::Member;
-use cw_multi_test::{BankSudo, Executor, SudoMsg};
+use cw_multi_test::{App, BankSudo, Executor, SudoMsg};
 
 use terp_sdk::NATIVE_DENOM;
 
@@ -13,7 +13,7 @@ pub const CREATION_FEE: u128 = 5_000_000_000;
 pub const INITIAL_BALANCE: u128 = 2_000_000_000;
 
 // uploads code and returns address of group contract
-pub fn instantiate_group(app: &mut TerpApp, members: Vec<Member>) -> Addr {
+pub fn instantiate_group(app: &mut App, members: Vec<Member>) -> Addr {
     let group_id = app.store_code(contract_group());
     println!("group_id: {group_id}");
     let msg = cw4_group::msg::InstantiateMsg {
@@ -25,7 +25,7 @@ pub fn instantiate_group(app: &mut TerpApp, members: Vec<Member>) -> Addr {
 }
 
 // Add a creator account with initial balances
-pub fn setup_accounts(router: &mut TerpApp) -> (Addr, Addr) {
+pub fn setup_accounts(router: &mut App) -> (Addr, Addr) {
     let buyer = Addr::unchecked("buyer");
     let creator = Addr::unchecked("creator");
     let dev = Addr::unchecked(DEV_ADDRESS);
@@ -81,7 +81,7 @@ pub fn setup_accounts(router: &mut TerpApp) -> (Addr, Addr) {
 }
 
 // Set blockchain time to after mint by default
-pub fn setup_block_time(router: &mut TerpApp, nanos: u64, height: Option<u64>) {
+pub fn setup_block_time(router: &mut App, nanos: u64, height: Option<u64>) {
     let mut block = router.block_info();
     block.time = Timestamp::from_nanos(nanos);
     if let Some(h) = height {

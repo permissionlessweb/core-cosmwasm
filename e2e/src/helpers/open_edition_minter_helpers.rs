@@ -2,16 +2,16 @@ use super::chain::Chain;
 use cosm_orc::orchestrator::error::ProcessError;
 use cosm_orc::orchestrator::{InstantiateResponse, SigningKey};
 use cosmwasm_std::{Coin, Timestamp, Uint128};
+use factory_utils::msg::CollectionExtensionMsg;
+use factory_utils::{
+    msg::{CollectionParams, CreateMinterMsg},
+    MinterParams,
+};
 use open_edition_factory::types::NftData;
 use open_edition_factory::{
     msg::{InstantiateMsg, OpenEditionMinterInitMsgExtension},
     state::ParamsExtension,
 };
-use factory_utils::{
-    msg::{CollectionParams, CreateMinterMsg},
-    MinterParams,
-};
-use cw721::CollectionInfo;
 
 // contract names used by cosm-orc to register stored code ids / instantiated addresses:
 #[allow(dead_code)]
@@ -101,14 +101,13 @@ pub fn create_minter_msg(
             code_id: code_id.unwrap_or_else(|| chain.orc.contract_map.code_id(cw721_NAME).unwrap()),
             name: "Collection".to_string(),
             symbol: "SYM".to_string(),
-            info: CollectionInfo {
-                creator: creator_addr,
-                description: "Description".to_string(),
-                image: "https://example.com/image.png".to_string(),
+            info: CollectionExtensionMsg {
+                description: Some("Description".to_string()),
+                image: Some("https://example.com/image.png".to_string()),
                 start_trading_time,
                 external_link: None,
                 explicit_content: None,
-                residual_info: None,
+                royalty_info: None,
             },
         },
     }

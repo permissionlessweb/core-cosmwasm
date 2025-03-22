@@ -4,22 +4,23 @@ use crate::msg::{
     QueryMsg, StartTimeResponse,
 };
 use crate::state::{
-    cw721_ADDRESS, Config, ConfigExtension, CONFIG, MINTABLE_NUM_TOKENS, MINTABLE_TOKEN_POSITIONS,
+    Config, ConfigExtension, CONFIG, CW721_ADDRESS, MINTABLE_NUM_TOKENS, MINTABLE_TOKEN_POSITIONS,
     MINTER_ADDRS, STATUS, WHITELIST_MINTER_ADDRS,
 };
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    coin, ensure, to_json_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Decimal, Deps, DepsMut, Empty, Env, Event, Fraction, MessageInfo, Order, Reply, ReplyOn, StdError, StdResult, Timestamp, Uint128, WasmMsg
+    coin, ensure, to_json_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Decimal, Deps, DepsMut,
+    Empty, Env, Event, Fraction, MessageInfo, Order, Reply, ReplyOn, Response, StdError, StdResult,
+    SubMsg, Timestamp, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
-use cw721_base::Extension;
 use cw_utils::{may_pay, maybe_addr, nonpayable};
 use rand_core::{RngCore, SeedableRng};
 use rand_xoshiro::Xoshiro128PlusPlus;
 use semver::Version;
 
-use cw721_base::msg::{ExecuteMsg as cw721ExecuteMsg, InstantiateMsg as Sg721InstantiateMsg};
+use cw721_base::msg::{ExecuteMsg as cw721ExecuteMsg, InstantiateMsg as Cw721InstantiateMsg};
 use earlybird_flex::msg::{
     ConfigResponse as EarlybirdConfigResponse, HasMemberResponse, Member,
     QueryMsg as EarlybirdQueryMsg,
@@ -30,14 +31,11 @@ use sha2::{Digest, Sha256};
 use shuffle::{fy::FisherYates, shuffler::Shuffler};
 use std::convert::TryInto;
 use terp_fee::{checked_fair_burn, ibc_denom_fair_burn};
-use terp_sdk::{TerpMsgWrapper, GENESIS_MINT_START_TIME, NATIVE_DENOM};
+use terp_sdk::{GENESIS_MINT_START_TIME, NATIVE_DENOM};
 use url::Url;
 
 use vending_factory::msg::{ParamsResponse, VendingMinterCreateMsg};
 use vending_factory::state::VendingMinterParams;
-
-pub type Response = cosmwasm_std::Response<TerpMsgWrapper>;
-pub type SubMsg = cosmwasm_std::SubMsg<TerpMsgWrapper>;
 
 pub struct TokenPositionMapping {
     pub position: u32,
@@ -134,9 +132,7 @@ pub fn instantiate(
         factory: factory.clone(),
         collection_code_id: msg.collection_params.code_id,
         extension: ConfigExtension {
-            admin: deps
-                .api
-                .addr_validate(&msg.collection_params.info.creator)?,
+            admin: info.sender.clone(),
             payment_address: maybe_addr(deps.api, msg.init_msg.payment_address)?,
             base_token_uri,
             num_tokens: msg.init_msg.num_tokens,
@@ -153,8 +149,7 @@ pub fn instantiate(
 
     let token_ids = random_token_list(
         &env,
-        deps.api
-            .addr_validate(&msg.collection_params.info.creator)?,
+        info.sender.clone(),
         (1..=msg.init_msg.num_tokens).collect::<Vec<u32>>(),
     )?;
     // Save mintable token ids map
@@ -168,17 +163,20 @@ pub fn instantiate(
     let submsg = SubMsg {
         msg: WasmMsg::Instantiate {
             code_id: msg.collection_params.code_id,
-            msg: to_json_binary(&Sg721InstantiateMsg {
+            msg: to_json_binary(&Cw721InstantiateMsg {
                 name: msg.collection_params.name.clone(),
                 symbol: msg.collection_params.symbol,
-                minter: env.contract.address.to_string(),
-                collection_info,
+                minter: Some(env.contract.address.to_string()),
+                collection_info_extension: todo!(),
+                creator: todo!(),
+                withdraw_address: todo!(),
             })?,
             funds: info.funds,
             admin: Some(config.extension.admin.to_string()),
             label: format!("cw721-{}", msg.collection_params.name.trim()),
         }
         .into(),
+        payload: Binary::new(vec![]),
         id: INSTANTIATE_cw721_REPLY_ID,
         gas_limit: None,
         reply_on: ReplyOn::Success,
@@ -609,7 +607,7 @@ fn _execute_mint(
         }
     }
 
-    let cw721_address = cw721_ADDRESS.load(deps.storage)?;
+    let cw721_address = CW721_ADDRESS.load(deps.storage)?;
 
     let recipient_addr = match recipient {
         Some(some_recipient) => some_recipient,
@@ -639,7 +637,9 @@ fn _execute_mint(
     } else {
         Decimal::bps(factory_params.mint_fee_bps)
     };
-    let network_fee = mint_price.amount.checked_multiply_ratio(mint_fee.numerator(),mint_fee.denominator())?;
+    let network_fee = mint_price
+        .amount
+        .checked_multiply_ratio(mint_fee.numerator(), mint_fee.denominator())?;
     // use ibc_denom_fair_burn for non native denoms
     if mint_price.denom != NATIVE_DENOM {
         // only send non-zero amounts
@@ -884,7 +884,7 @@ pub fn execute_update_start_trading_time(
 ) -> Result<Response, ContractError> {
     nonpayable(&info)?;
     let config = CONFIG.load(deps.storage)?;
-    let cw721_contract_addr = cw721_ADDRESS.load(deps.storage)?;
+    let cw721_contract_addr = CW721_ADDRESS.load(deps.storage)?;
 
     if info.sender != config.extension.admin {
         return Err(ContractError::Unauthorized(
@@ -918,16 +918,17 @@ pub fn execute_update_start_trading_time(
     }
 
     // execute cw721 contract
-    let msg = WasmMsg::Execute {
-        contract_addr: cw721_contract_addr.to_string(),
-        msg: to_json_binary(&cw721ExecuteMsg::UpdateStartTradingTime(start_time))?,
-        funds: vec![],
-    };
+    // let msg = WasmMsg::Execute {
+    //     contract_addr: cw721_contract_addr.to_string(),
+    //     msg: to_json_binary(&cw721ExecuteMsg::UpdateStartTradingTime(start_time))?,
+    //     funds: vec![],
+    // };
 
-    Ok(Response::new()
-        .add_attribute("action", "update_start_trading_time")
-        .add_attribute("sender", info.sender)
-        .add_message(msg))
+    Ok(
+        Response::new()
+            .add_attribute("action", "update_start_trading_time")
+            .add_attribute("sender", info.sender), // .add_message(msg)
+    )
 }
 
 pub fn execute_update_per_address_limit(
@@ -1105,7 +1106,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 
 fn query_config(deps: Deps) -> StdResult<ConfigResponse> {
     let config = CONFIG.load(deps.storage)?;
-    let cw721_address = cw721_ADDRESS.load(deps.storage)?;
+    let cw721_address = CW721_ADDRESS.load(deps.storage)?;
 
     Ok(ConfigResponse {
         admin: config.extension.admin.to_string(),
@@ -1191,18 +1192,18 @@ pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractE
     if msg.id != INSTANTIATE_cw721_REPLY_ID {
         return Err(ContractError::InvalidReplyID {});
     }
-
-    let reply = parse_reply_instantiate_data(msg);
-    match reply {
-        Ok(res) => {
-            let cw721_address = res.contract_address;
-            cw721_ADDRESS.save(deps.storage, &Addr::unchecked(cw721_address.clone()))?;
-            Ok(Response::default()
-                .add_attribute("action", "instantiate_cw721_reply")
-                .add_attribute("cw721_address", cw721_address))
-        }
-        Err(_) => Err(ContractError::InstantiateSg721Error {}),
-    }
+    Ok(Response::new())
+    // // let reply = parse_reply_instantiate_data(msg);
+    // match reply {
+    //     Ok(res) => {
+    //         let cw721_address = res.contract_address;
+    //         CW721_ADDRESS.save(deps.storage, &Addr::unchecked(cw721_address.clone()))?;
+    //         Ok(Response::default()
+    //             .add_attribute("action", "instantiate_cw721_reply")
+    //             .add_attribute("cw721_address", cw721_address))
+    //     }
+    //     Err(_) => Err(ContractError::InstantiateSg721Error {}),
+    // }
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

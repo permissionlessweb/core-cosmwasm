@@ -9,7 +9,7 @@ use crate::common_setup::{
 };
 use cosmwasm_std::{coins, Addr, Coin, Timestamp};
 use cw4::Member;
-use cw_multi_test::{next_block, Executor};
+use cw_multi_test::{next_block, App, Executor};
 use factory_utils::tests::mock_collection_params_1;
 
 use terp_splits::msg::{ExecuteMsg as SplitsExecuteMsg, Group};
@@ -30,7 +30,7 @@ pub fn member<T: Into<String>>(addr: T, weight: u64) -> Member {
 }
 
 #[track_caller]
-fn instantiate_splits(app: &mut TerpApp, group_addr: Addr) -> Addr {
+fn instantiate_splits(app: &mut App, group_addr: Addr) -> Addr {
     let splits_id = app.store_code(contract_splits());
     println!("splits_id: {splits_id}");
     let msg = terp_splits::msg::InstantiateMsg {
@@ -42,7 +42,7 @@ fn instantiate_splits(app: &mut TerpApp, group_addr: Addr) -> Addr {
 }
 
 #[track_caller]
-fn setup_splits_test_case(app: &mut TerpApp, init_funds: Vec<Coin>) -> (Addr, Addr) {
+fn setup_splits_test_case(app: &mut App, init_funds: Vec<Coin>) -> (Addr, Addr) {
     // 1. Instantiate group contract with members (and OWNER as admin)
     let members = vec![
         member(OWNER, 50),

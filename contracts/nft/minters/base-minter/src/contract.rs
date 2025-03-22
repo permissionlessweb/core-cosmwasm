@@ -2,20 +2,19 @@ use crate::error::ContractError;
 use crate::msg::{ConfigResponse, ExecuteMsg};
 use crate::state::{increment_token_index, Config, COLLECTION_ADDRESS, CONFIG, STATUS};
 use base_factory::msg::{BaseMinterCreateMsg, ParamsResponse};
-use base_factory::state::Extension;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     to_json_binary, Addr, Binary, CosmosMsg, Decimal, Deps, DepsMut, Empty, Env, Fraction,
-    MessageInfo, Reply, Response, StdResult, Timestamp, WasmMsg,
+    MessageInfo, Reply, Response, StdResult, SubMsg, Timestamp, WasmMsg,
 };
 use cw2::set_contract_version;
-use cw721::msg::CollectionInfoAndExtensionResponse;
+use cw721::msg::CollectionExtensionMsg;
+use cw721::Ownership;
 use cw721_base::msg::{
-    CollectionInfoResponse, ExecuteMsg as cw721ExecuteMsg, InstantiateMsg as Sg721InstantiateMsg,
-    QueryMsg as cw721QueryMsg,
+    ExecuteMsg as cw721ExecuteMsg, InstantiateMsg as Cw721InstantiateMsg, QueryMsg as cw721QueryMsg,
 };
-use cw_utils::{must_pay, nonpayable, parse_instantiate_response_data};
+use cw_utils::{must_pay, nonpayable};
 use factory_utils::query::FactoryUtilsQueryMsg;
 use minter_utils::{QueryMsg, Status, StatusResponse, SudoMsg};
 use terp_fee::checked_fair_burn;
@@ -58,27 +57,34 @@ pub fn instantiate(
     // Use default start trading time if not provided
     let mut collection_info = msg.collection_params.info.clone();
     let offset = factory_params.params.max_trading_offset_secs;
-    let start_trading_time = msg
-        .collection_params
-        .info
-        .start_trading_time
-        .or_else(|| Some(env.block.time.plus_seconds(offset)));
-    collection_info.start_trading_time = start_trading_time;
-
-    CONFIG.save(deps.storage, &config)?;
+    // let start_trading_time = msg
+    //     .collection_params
+    //     .info
+    //     .start_trading_time
+    //     .or_else(|| Some(env.block.time.plus_seconds(offset)));
+    // collection_info.start_trading_time = start_trading_time;
 
     let wasm_msg = WasmMsg::Instantiate {
         code_id: msg.collection_params.code_id,
-        msg: to_json_binary(&Sg721InstantiateMsg {
+        msg: to_json_binary(&Cw721InstantiateMsg {
             name: msg.collection_params.name.clone(),
             symbol: msg.collection_params.symbol,
-            minter: env.contract.address.to_string(),
-            collection_info,
+            creator: Some(info.sender.to_string()),
+            withdraw_address: None,
+            minter: Some(env.contract.address.to_string()),
+            collection_info_extension: Some(CollectionExtensionMsg {
+                description: msg.collection_params.info.description.clone(),
+                image: collection_info.image.clone(),
+                external_link: collection_info.external_link.clone(),
+                explicit_content: collection_info.explicit_content.clone(),
+                start_trading_time: collection_info.start_trading_time.clone(),
+                royalty_info: collection_info.royalty_info.clone(),
+            }),
         })?,
         funds: info.funds,
         admin: Some(
             deps.api
-                .addr_validate(&msg.collection_params.info.creator)?
+                .addr_validate(&info.sender.to_string())?
                 .to_string(),
         ),
         label: format!(
@@ -87,6 +93,9 @@ pub fn instantiate(
             msg.collection_params.name.trim()
         ),
     };
+
+    CONFIG.save(deps.storage, &config)?;
+
     let submsg = SubMsg::reply_on_success(wasm_msg, INSTANTIATE_cw721_REPLY_ID);
 
     Ok(Response::new()
@@ -122,17 +131,18 @@ pub fn execute_mint_sender(
 
     // This is a 1:1 minter, minted at min_mint_price
     // Should mint and then list on the marketplace for secondary sales
-    let collection_info: CollectionInfoAndExtensionResponse<Empty> =
-        deps.querier.query_wasm_smart(
-            collection_address.clone(),
-            &cw721QueryMsg::GetCollectionInfoAndExtension {},
-        )?;
+    let minter_info: Ownership<Addr> = deps.querier.query_wasm_smart(
+        collection_address.clone(),
+        &cw721QueryMsg::GetMinterOwnership {},
+    )?;
     // allow only cw721 creator address to mint
-    if collection_info.creator != info.sender {
-        return Err(ContractError::Unauthorized(
-            "Sender is not cw721 creator".to_owned(),
-        ));
-    };
+    if let Some(minter) = minter_info.owner {
+        if minter != info.sender {
+            return Err(ContractError::Unauthorized(
+                "Sender is not cw721 creator".to_owned(),
+            ));
+        };
+    }
 
     let parsed_token_uri = Url::parse(&token_uri)?;
     if parsed_token_uri.scheme() != "ipfs" {
@@ -190,37 +200,39 @@ pub fn execute_update_start_trading_time(
     nonpayable(&info)?;
     let cw721_contract_addr = COLLECTION_ADDRESS.load(deps.storage)?;
 
-    let collection_info: CollectionInfoResponse = deps.querier.query_wasm_smart(
+    let ownership: Ownership<Addr> = deps.querier.query_wasm_smart(
         cw721_contract_addr.clone(),
-        &cw721QueryMsg::GetCollectionInfoAndExtension {},
+        &cw721QueryMsg::GetCreatorOwnership {},
     )?;
-    if info.sender != collection_info.creator {
-        return Err(ContractError::Unauthorized(
-            "Sender is not creator".to_owned(),
-        ));
-    }
 
-    // add custom rules here
-    if let Some(start_time) = start_time {
-        if env.block.time > start_time {
-            return Err(ContractError::InvalidStartTradingTime(
-                env.block.time,
-                start_time,
+    if let Some(oh) = ownership.owner {
+        if info.sender != oh {
+            return Err(ContractError::Unauthorized(
+                "Sender is not creator".to_owned(),
             ));
         }
+        // add custom rules here
+        if let Some(start_time) = start_time {
+            if env.block.time > start_time {
+                return Err(ContractError::InvalidStartTradingTime(
+                    env.block.time,
+                    start_time,
+                ));
+            }
+        }
+        // execute cw721 contract
+        // let msg = WasmMsg::Execute {
+        //     contract_addr: cw721_contract_addr.to_string(),
+        //     msg: to_json_binary(&cw721ExecuteMsg::UpdateStartTradingTime(start_time))?,
+        //     funds: vec![],
+        // };
     }
 
-    // execute cw721 contract
-    let msg = WasmMsg::Execute {
-        contract_addr: cw721_contract_addr.to_string(),
-        msg: to_json_binary(&cw721ExecuteMsg::UpdateStartTradingTime(start_time))?,
-        funds: vec![],
-    };
-
-    Ok(Response::new()
-        .add_attribute("action", "update_start_time")
-        .add_attribute("sender", info.sender)
-        .add_message(msg))
+    Ok(
+        Response::new()
+            .add_attribute("action", "update_start_time")
+            .add_attribute("sender", info.sender), // .add_message(msg)
+    )
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -233,6 +245,33 @@ pub fn sudo(deps: DepsMut, _env: Env, msg: SudoMsg) -> Result<Response, Contract
         } => update_status(deps, is_verified, is_blocked, is_explicit)
             .map_err(|_| ContractError::UpdateStatus {}),
     }
+}
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+    match msg {
+        QueryMsg::Config {} => to_json_binary(&query_config(deps)?),
+        QueryMsg::Status {} => to_json_binary(&query_status(deps)?),
+    }
+}
+// Reply callback triggered from cw721 contract instantiation in instantiate()
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn reply(deps: DepsMut, _env: Env, reply: Reply) -> Result<Response, ContractError> {
+    if reply.id != INSTANTIATE_cw721_REPLY_ID {
+        return Err(ContractError::InvalidReplyID {});
+    }
+
+    Ok(Response::new())
+
+    // match reply {
+    //     Ok(res) => {
+    //         let collection_address = res.contract_address;
+    //         COLLECTION_ADDRESS.save(deps.storage, &Addr::unchecked(collection_address.clone()))?;
+    //         Ok(Response::default()
+    //             .add_attribute("action", "instantiate_cw721_reply")
+    //             .add_attribute("cw721_address", collection_address))
+    //     }
+    //     Err(_) => Err(ContractError::InstantiateSg721Error {}),
+    // }
 }
 
 /// Only governance can update contract params
@@ -251,14 +290,6 @@ pub fn update_status(
     Ok(Response::new().add_attribute("action", "sudo_update_status"))
 }
 
-#[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
-    match msg {
-        QueryMsg::Config {} => to_json_binary(&query_config(deps)?),
-        QueryMsg::Status {} => to_json_binary(&query_status(deps)?),
-    }
-}
-
 fn query_config(deps: Deps) -> StdResult<ConfigResponse> {
     let config = CONFIG.load(deps.storage)?;
     let collection_address = COLLECTION_ADDRESS.load(deps.storage)?;
@@ -273,24 +304,4 @@ pub fn query_status(deps: Deps) -> StdResult<StatusResponse> {
     let status = STATUS.load(deps.storage)?;
 
     Ok(StatusResponse { status })
-}
-
-// Reply callback triggered from cw721 contract instantiation in instantiate()
-#[cfg_attr(not(feature = "library"), entry_point)]
-pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
-    if msg.id != INSTANTIATE_cw721_REPLY_ID {
-        return Err(ContractError::InvalidReplyID {});
-    }
-
-    let reply = parse_instantiate_response_data(msg);
-    match reply {
-        Ok(res) => {
-            let collection_address = res.contract_address;
-            COLLECTION_ADDRESS.save(deps.storage, &Addr::unchecked(collection_address.clone()))?;
-            Ok(Response::default()
-                .add_attribute("action", "instantiate_cw721_reply")
-                .add_attribute("cw721_address", collection_address))
-        }
-        Err(_) => Err(ContractError::InstantiateSg721Error {}),
-    }
 }

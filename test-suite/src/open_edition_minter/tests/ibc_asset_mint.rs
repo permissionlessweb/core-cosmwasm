@@ -79,7 +79,7 @@ fn check_custom_create_minter_denom() {
     let balance = router.wrap().query_balance(buyer, denom).unwrap();
     assert_eq!(balance.amount, Uint128::zero());
     // TODO only for noble, seller has 90% IBC asset
-    let network_fee = mint_price.amount * Decimal::percent(10);
+    let network_fee = mint_price.amount.checked_multiply_ratio(10u128, 100u128).expect("");
     let seller_amount = mint_price.amount.checked_sub(network_fee).unwrap();
     let balance = router.wrap().query_balance(creator, denom).unwrap();
     assert_eq!(balance.amount, seller_amount);
@@ -164,7 +164,7 @@ fn one_hundred_percent_burned_ibc_minter() {
         .wrap()
         .query_balance(Addr::unchecked(FOUNDATION), denom)
         .unwrap();
-    assert_eq!(balance.amount, mint_price.amount * Decimal::percent(50));
+    assert_eq!(balance.amount, mint_price.amount.checked_multiply_ratio(50u128, 100u128).expect("msg"));
 }
 
 #[test]

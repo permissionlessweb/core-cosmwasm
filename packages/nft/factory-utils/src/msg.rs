@@ -1,6 +1,6 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Coin, Empty};
-use cw721::msg::CollectionInfoAndExtensionResponse;
+use cosmwasm_std::{Coin, Timestamp};
+use cw721::msg::RoyaltyInfoResponse;
 
 #[cw_serde]
 pub struct CreateMinterMsg<T> {
@@ -14,7 +14,17 @@ pub struct CollectionParams {
     pub code_id: u64,
     pub name: String,
     pub symbol: String,
-    pub info: CollectionInfoAndExtensionResponse<Empty>,
+    pub info: CollectionExtensionMsg<RoyaltyInfoResponse>,
+}
+
+#[cw_serde]
+pub struct CollectionExtensionMsg<TRoyaltyInfoResponse> {
+    pub description: Option<String>,
+    pub image: Option<String>,
+    pub external_link: Option<String>,
+    pub explicit_content: Option<bool>,
+    pub start_trading_time: Option<Timestamp>,
+    pub royalty_info: Option<TRoyaltyInfoResponse>,
 }
 
 /// Message for params so they can be updated individually by governance

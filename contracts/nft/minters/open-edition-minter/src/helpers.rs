@@ -70,16 +70,17 @@ pub fn mint_nft_msg(
     token_uri: Option<String>,
 ) -> Result<CosmosMsg, StdError> {
     let mint_msg = if let Some(extension) = extension {
-        CosmosMsg::Wasm(WasmMsg::Execute {
-            contract_addr: cw721_address.to_string(),
-            msg: to_json_binary(&cw721ExecuteMsg::Mint {
-                token_id,
-                owner: recipient_addr.to_string(),
-                token_uri: None,
-                extension,
-            })?,
-            funds: vec![],
-        })
+        return Err(StdError::generic_err("unimplemeneted"));
+        // CosmosMsg::Wasm(WasmMsg::Execute {
+        //     contract_addr: cw721_address.to_string(),
+        //     msg: to_json_binary(&cw721ExecuteMsg::Mint {
+        //         token_id,
+        //         owner: recipient_addr.to_string(),
+        //         token_uri: None,
+        //         extension: Some(extension),
+        //     })?,
+        //     funds: vec![],
+        // })
     } else {
         CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: cw721_address.to_string(),

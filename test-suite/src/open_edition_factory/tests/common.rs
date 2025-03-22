@@ -1,14 +1,14 @@
 use crate::common_setup::contract_boxes::{contract_open_edition_factory, custom_mock_app};
 use crate::common_setup::setup_minter::open_edition_minter::mock_params::mock_params_proper;
 use cosmwasm_std::Addr;
-use cw_multi_test::Executor;
+use cw_multi_test::{App, Executor};
 use open_edition_factory::helpers::FactoryContract;
 use open_edition_factory::msg::InstantiateMsg;
 
 
 const GOVERNANCE: &str = "governance";
 
-pub fn proper_instantiate() -> (TerpApp, FactoryContract) {
+pub fn proper_instantiate() -> (App, FactoryContract) {
     let mut app = custom_mock_app();
     let factory_id = app.store_code(contract_open_edition_factory());
     let minter_id = 2;

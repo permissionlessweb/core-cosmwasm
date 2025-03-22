@@ -38,6 +38,7 @@ cosmwasm-std          = { workspace = true }
 cw4                   = { workspace = true }
 cw-multi-test         = { workspace = true }
 cw4-group             = { workspace = true }
+cw721-nt              = { workspace = true }
 terp-splits           = { workspace = true }
 anyhow                = "1.0.57"
 earlybird-immutable   = { workspace = true, features = ["library"] }

@@ -3,9 +3,9 @@ use crate::common_setup::{
 };
 use cosmwasm_std::{coin, coins, Addr, Decimal, Uint128};
 use cw_multi_test::{BankSudo, Executor, SudoMsg};
+use earlybird::msg::{AddMembersMsg, ExecuteMsg as EarlybirdExecuteMsg};
 use factory_utils::{msg::FactoryUtilsExecuteMsg, tests::mock_collection_params};
 use terp_sdk::{GENESIS_MINT_START_TIME, NATIVE_DENOM};
-use earlybird::msg::{AddMembersMsg, ExecuteMsg as EarlybirdExecuteMsg};
 use vending_factory::ContractError;
 use vending_minter::msg::ExecuteMsg;
 use vending_minter::ContractError as MinterContractError;
@@ -90,7 +90,7 @@ fn denom_mismatch_creating_minter() {
 
     let mut msg = mock_create_minter_init_msg(mock_collection_params(), init_msg);
     msg.collection_params.code_id = cw721_code_id;
-    msg.collection_params.info.creator = minter_admin.to_string();
+    // msg.collection_params.info.creator = minter_admin.to_string();
     let creation_fee = coins(CREATION_FEE, NATIVE_DENOM);
     let msg = FactoryUtilsExecuteMsg::CreateMinter(msg);
 
@@ -164,7 +164,7 @@ fn wl_denom_mint() {
 
     let mut msg = mock_create_minter_init_msg(mock_collection_params(), init_msg);
     msg.collection_params.code_id = cw721_code_id;
-    msg.collection_params.info.creator = minter_admin.to_string();
+    // msg.collection_params.info.creator = minter_admin.to_string();
     let creation_fee = coins(CREATION_FEE, NATIVE_DENOM);
     let msg = FactoryUtilsExecuteMsg::CreateMinter(msg);
     let res = app.execute_contract(minter_admin, factory_addr, &msg, &creation_fee);
@@ -254,10 +254,22 @@ fn wl_denom_mint() {
     assert_eq!(balance.amount, Uint128::zero());
     // for seller should get 90% of IBC asset
     let balance = app.wrap().query_balance(creator, denom).unwrap();
-    assert_eq!(balance.amount, wl_mint_price.amount * Decimal::percent(90));
+    assert_eq!(
+        balance.amount,
+        wl_mint_price
+            .amount
+            .checked_multiply_ratio(90u128, 100u128)
+            .expect(""),
+    );
     let balance = app
         .wrap()
         .query_balance(Addr::unchecked(FOUNDATION), denom)
         .unwrap();
-    assert_eq!(balance.amount, wl_mint_price.amount * Decimal::percent(10));
+    assert_eq!(
+        balance.amount,
+        wl_mint_price
+            .amount
+            .checked_multiply_ratio(10u128, 100u128)
+            .expect(""),
+    );
 }

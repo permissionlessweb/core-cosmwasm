@@ -1,9 +1,8 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{to_json_binary, Addr, Binary, Deps, DepsMut, Empty, Env, MessageInfo, StdResult};
-use cw_multi_test::{Contract, ContractWrapper, Executor};
+use cosmwasm_std::{to_json_binary, Addr, Binary, Deps, DepsMut, Empty, Env, MessageInfo, Response, StdResult};
+use cw_multi_test::{App, Contract, ContractWrapper, Executor};
 use cw_utils::maybe_addr;
 
-use terp_sdk::{Response, TerpMsgWrapper};
 use terp_residual_registry::{fetch_or_set_residuals, ContractError};
 
 #[cw_serde]
@@ -54,12 +53,12 @@ pub fn query(_deps: Deps, _env: Env, _msg: Empty) -> StdResult<Binary> {
     to_json_binary(&_msg)
 }
 
-pub fn contract_dummy() -> Box<dyn Contract<TerpMsgWrapper>> {
+pub fn contract_dummy() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(execute, instantiate, query);
     Box::new(contract)
 }
 
-pub fn setup_dummy_contract(router: &mut TerpApp, creator: Addr) -> Addr {
+pub fn setup_dummy_contract(router: &mut App, creator: Addr) -> Addr {
     let dummy_contract_id = router.store_code(contract_dummy());
     router
         .instantiate_contract(

@@ -79,7 +79,7 @@ fn update_code_id() {
         init_msg,
         collection_params,
     };
-    msg.collection_params.info.creator = creator.to_string();
+    // msg.collection_params.info.creator = creator.to_string();
     let creation_fee = coins(CREATION_FEE, NATIVE_DENOM);
     let msg = FactoryUtilsExecuteMsg::CreateMinter(msg);
     let res = router.execute_contract(creator, factory, &msg, &creation_fee);

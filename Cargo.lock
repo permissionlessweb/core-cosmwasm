@@ -1773,6 +1773,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "cw721-non-transferable"
+version = "0.20.0"
+source = "git+https://github.com/public-awesome/cw-nfts?branch=main#99dbf7ee89fd1e13f72380e92ff95a456183b35d"
+dependencies = [
+ "cosmwasm-schema 2.2.2",
+ "cosmwasm-std 2.2.2",
+ "cw-storage-plus 2.0.0",
+ "cw2 2.0.0",
+ "cw721 0.20.0",
+ "schemars",
+ "serde",
+]
+
+[[package]]
 name = "der"
 version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1894,6 +1908,7 @@ dependencies = [
  "cosm-orc",
  "cosm-tome",
  "cosmwasm-std 2.2.2",
+ "cw721 0.20.0",
  "env_logger",
  "factory-utils",
  "once_cell",
@@ -3300,6 +3315,7 @@ dependencies = [
  "cw-storage-plus 2.0.0",
  "cw-utils 2.0.0",
  "cw2 2.0.0",
+ "cw721 0.20.0",
  "cw721-base 0.20.0",
  "factory-utils",
  "minter-utils",
@@ -4854,6 +4870,7 @@ dependencies = [
  "cw4-group",
  "cw721 0.20.0",
  "cw721-base 0.20.0",
+ "cw721-non-transferable",
  "earlybird",
  "earlybird-immutable",
  "ethers-core",

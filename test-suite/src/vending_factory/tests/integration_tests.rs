@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::Addr;
-    use cw_multi_test::Executor;
+    use cw_multi_test::{App, Executor};
     
     use vending_factory::helpers::FactoryContract;
     use vending_factory::msg::InstantiateMsg;
@@ -11,7 +11,7 @@ mod tests {
 
     const GOVERNANCE: &str = "governance";
 
-    fn proper_instantiate() -> (TerpApp, FactoryContract) {
+    fn proper_instantiate() -> (App, FactoryContract) {
         let mut app = custom_mock_app();
         let factory_id = app.store_code(contract_vending_factory());
         let minter_id = 2;

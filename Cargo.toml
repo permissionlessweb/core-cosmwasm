@@ -59,6 +59,7 @@ cw20             = "2.0.0"
 cw4-group        = "2.0.0"
 cw721            = {version = "0.20.0",  branch = "main", "git" = "https://github.com/public-awesome/cw-nfts"}
 cw721-base        = {version = "0.20.0",  branch = "main", "git" = "https://github.com/public-awesome/cw-nfts"}
+cw721-nt         = {package = "cw721-non-transferable", version = "0.20.0",  branch = "main", "git" = "https://github.com/public-awesome/cw-nfts"}
 cw-asset = "4.0.0"
 cw-utils         = "2.0.0"
 cw-ownable       = "2.1.0"

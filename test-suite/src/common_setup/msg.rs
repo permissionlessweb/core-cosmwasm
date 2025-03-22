@@ -2,13 +2,14 @@ use anyhow::Error;
 use cosmwasm_std::{Addr, Timestamp};
 
 use cosmwasm_std::Uint128;
+use cw_multi_test::App;
 use open_edition_factory::state::{OpenEditionMinterParams, ParamsExtension};
 use factory_utils::msg::CollectionParams;
 
 use vending_factory::msg::VendingMinterInitMsgExtension;
 
 pub struct MinterSetupParams<'a> {
-    pub router: &'a mut TerpApp,
+    pub router: &'a mut App,
     pub minter_admin: Addr,
     pub num_tokens: u32,
     pub collection_params: CollectionParams,
@@ -46,13 +47,13 @@ pub struct CodeIds {
 
 pub struct MinterTemplateResponse<T> {
     pub collection_response_vec: Vec<MinterCollectionResponse>,
-    pub router: TerpApp,
+    pub router: App,
     pub accts: T,
 }
 
 pub struct MinterTemplateResponseCodeIds<T> {
     pub collection_response_vec: Vec<MinterCollectionResponse>,
-    pub router: TerpApp,
+    pub router: App,
     pub accts: T,
     pub code_ids: CodeIds,
 }
@@ -63,7 +64,7 @@ pub struct Accounts {
 }
 
 pub struct OpenEditionMinterSetupParams<'a> {
-    pub router: &'a mut TerpApp,
+    pub router: &'a mut App,
     pub minter_admin: Addr,
     pub collection_params: CollectionParams,
     pub start_time: Option<Timestamp>,

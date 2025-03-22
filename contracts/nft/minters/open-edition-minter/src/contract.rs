@@ -5,29 +5,27 @@ use crate::msg::{
     StartTimeResponse, TotalMintCountResponse,
 };
 use crate::state::{
-    increment_token_index, Config, ConfigExtension, CONFIG, MINTER_ADDRS, cw721_ADDRESS, STATUS,
+    increment_token_index, Config, ConfigExtension, CONFIG, CW721_ADDRESS, MINTER_ADDRS, STATUS,
     TOTAL_MINT_COUNT,
 };
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    coin, to_json_binary, Addr, BankMsg, Binary, Coin, Decimal, Deps, DepsMut, Empty, Env, MessageInfo,
-    Order, Reply, ReplyOn, StdError, StdResult, Timestamp, WasmMsg,
+    coin, to_json_binary, Addr, BankMsg, Binary, Coin, Decimal, Deps, DepsMut, Empty, Env,
+    Fraction, MessageInfo, Order, Reply, ReplyOn, Response, StdError, StdResult, SubMsg, Timestamp,
+    WasmMsg,
 };
 use cw2::set_contract_version;
-use cw_utils::{may_pay, maybe_addr, nonpayable, parse_reply_instantiate_data};
+use cw721_base::msg::{ExecuteMsg as cw721ExecuteMsg, InstantiateMsg as Cw721InstantiateMsg};
+use cw_utils::{may_pay, maybe_addr, nonpayable};
+use factory_utils::query::FactoryUtilsQueryMsg;
+use minter_utils::{Status, StatusResponse, SudoMsg};
 use open_edition_factory::msg::{OpenEditionMinterCreateMsg, ParamsResponse};
 use open_edition_factory::types::NftMetadataType;
 use semver::Version;
 use terp_fee::{checked_fair_burn, ibc_denom_fair_burn};
-use factory_utils::query::FactoryUtilsQueryMsg;
-use minter_utils::{Status, StatusResponse, SudoMsg};
-use cw721::{ExecuteMsg as cw721ExecuteMsg, InstantiateMsg as Sg721InstantiateMsg};
-use terp_sdk::{TerpMsgWrapper, NATIVE_DENOM};
+use terp_sdk::NATIVE_DENOM;
 use url::Url;
-
-pub type Response = cosmwasm_std::Response<TerpMsgWrapper>;
-pub type SubMsg = cosmwasm_std::SubMsg<TerpMsgWrapper>;
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:terp-open-edition-minter";
@@ -117,9 +115,7 @@ pub fn instantiate(
         factory: factory.clone(),
         collection_code_id: msg.collection_params.code_id,
         extension: ConfigExtension {
-            admin: deps
-                .api
-                .addr_validate(&msg.collection_params.info.creator)?,
+            admin: info.sender.clone(),
             payment_address: maybe_addr(deps.api, msg.init_msg.payment_address)?,
             per_address_limit: msg.init_msg.per_address_limit,
             start_time: msg.init_msg.start_time,
@@ -138,11 +134,13 @@ pub fn instantiate(
     let submsg = SubMsg {
         msg: WasmMsg::Instantiate {
             code_id: msg.collection_params.code_id,
-            msg: to_json_binary(&Sg721InstantiateMsg {
+            msg: to_json_binary(&Cw721InstantiateMsg {
                 name: msg.collection_params.name.clone(),
                 symbol: msg.collection_params.symbol,
-                minter: env.contract.address.to_string(),
-                collection_info,
+                minter: Some(env.contract.address.to_string()),
+                collection_info_extension: todo!(),
+                creator: todo!(),
+                withdraw_address: todo!(),
             })?,
             funds: info.funds,
             admin: Some(config.extension.admin.to_string()),
@@ -152,6 +150,7 @@ pub fn instantiate(
         id: INSTANTIATE_cw721_REPLY_ID,
         gas_limit: None,
         reply_on: ReplyOn::Success,
+        payload: Binary::new(vec![]),
     };
 
     Ok(Response::new()
@@ -274,7 +273,7 @@ fn _execute_mint(
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
 
-    let cw721_address = cw721_ADDRESS.load(deps.storage)?;
+    let cw721_address = CW721_ADDRESS.load(deps.storage)?;
 
     let recipient_addr = match recipient {
         Some(some_recipient) => some_recipient,
@@ -306,7 +305,9 @@ fn _execute_mint(
     } else {
         Decimal::bps(factory_params.mint_fee_bps)
     };
-    let network_fee = mint_price.amount * mint_fee;
+    let network_fee = mint_price
+        .amount
+        .checked_multiply_ratio(mint_fee.numerator(), mint_fee.denominator())?;
 
     // This is for the network fee msg
     // send non-native fees to community pool
@@ -532,7 +533,7 @@ pub fn execute_update_start_trading_time(
 ) -> Result<Response, ContractError> {
     nonpayable(&info)?;
     let config = CONFIG.load(deps.storage)?;
-    let cw721_contract_addr = cw721_ADDRESS.load(deps.storage)?;
+    let cw721_contract_addr = CW721_ADDRESS.load(deps.storage)?;
 
     if info.sender != config.extension.admin {
         return Err(ContractError::Unauthorized(
@@ -565,19 +566,18 @@ pub fn execute_update_start_trading_time(
         }
     }
 
-    // execute cw721 contract
-    let msg = WasmMsg::Execute {
-        contract_addr: cw721_contract_addr.to_string(),
-        msg: to_json_binary(&cw721ExecuteMsg::<Empty, Empty>::UpdateStartTradingTime(
-            start_time,
-        ))?,
-        funds: vec![],
-    };
+    // // execute cw721 contract
+    // let msg = WasmMsg::Execute {
+    //     contract_addr: cw721_contract_addr.to_string(),
+    //     msg: to_json_binary(&cw721ExecuteMsg::UpdateStartTradingTime(start_time))?,
+    //     funds: vec![],
+    // };
 
-    Ok(Response::new()
-        .add_attribute("action", "update_start_trading_time")
-        .add_attribute("sender", info.sender)
-        .add_message(msg))
+    Ok(
+        Response::new()
+            .add_attribute("action", "update_start_trading_time")
+            .add_attribute("sender", info.sender), // .add_message(msg)
+    )
 }
 
 pub fn execute_update_per_address_limit(
@@ -676,14 +676,16 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::StartTime {} => to_json_binary(&query_start_time(deps)?),
         QueryMsg::EndTime {} => to_json_binary(&query_end_time(deps)?),
         QueryMsg::MintPrice {} => to_json_binary(&query_mint_price(deps)?),
-        QueryMsg::MintCount { address } => to_json_binary(&query_mint_count_per_address(deps, address)?),
+        QueryMsg::MintCount { address } => {
+            to_json_binary(&query_mint_count_per_address(deps, address)?)
+        }
         QueryMsg::TotalMintCount {} => to_json_binary(&query_mint_count(deps)?),
     }
 }
 
 fn query_config(deps: Deps) -> StdResult<ConfigResponse> {
     let config = CONFIG.load(deps.storage)?;
-    let cw721_address = cw721_ADDRESS.load(deps.storage)?;
+    let cw721_address = CW721_ADDRESS.load(deps.storage)?;
 
     Ok(ConfigResponse {
         admin: config.extension.admin.to_string(),
@@ -761,18 +763,18 @@ pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractE
     if msg.id != INSTANTIATE_cw721_REPLY_ID {
         return Err(ContractError::InvalidReplyID {});
     }
-
-    let reply = parse_reply_instantiate_data(msg);
-    match reply {
-        Ok(res) => {
-            let cw721_address = res.contract_address;
-            cw721_ADDRESS.save(deps.storage, &Addr::unchecked(cw721_address.clone()))?;
-            Ok(Response::default()
-                .add_attribute("action", "instantiate_cw721_reply")
-                .add_attribute("cw721_address", cw721_address))
-        }
-        Err(_) => Err(ContractError::InstantiateSg721Error {}),
-    }
+    Ok(Response::new())
+    // let reply = parse_reply_instantiate_data(msg);
+    // match reply {
+    //     Ok(res) => {
+    //         let cw721_address = res.contract_address;
+    //         CW721_ADDRESS.save(deps.storage, &Addr::unchecked(cw721_address.clone()))?;
+    //         Ok(Response::default()
+    //             .add_attribute("action", "instantiate_cw721_reply")
+    //             .add_attribute("cw721_address", cw721_address))
+    //     }
+    //     Err(_) => Err(ContractError::InstantiateSg721Error {}),
+    // }
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

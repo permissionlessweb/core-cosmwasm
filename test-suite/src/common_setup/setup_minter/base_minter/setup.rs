@@ -1,7 +1,7 @@
 use crate::common_setup::contract_boxes::contract_base_factory;
 use crate::common_setup::contract_boxes::contract_base_minter;
-use crate::common_setup::contract_boxes::contract_nt_collection;
 use crate::common_setup::contract_boxes::contract_cw721_base;
+use crate::common_setup::contract_boxes::contract_nt_collection;
 use crate::common_setup::msg::MinterCollectionResponse;
 use crate::common_setup::msg::MinterSetupParams;
 use crate::common_setup::setup_minter::common::constants::MIN_MINT_PRICE;
@@ -11,6 +11,7 @@ use cosmwasm_std::to_json_binary;
 use cosmwasm_std::Coin;
 use cosmwasm_std::Empty;
 use cosmwasm_std::{coins, Addr};
+use cw_multi_test::App;
 use cw_multi_test::AppResponse;
 use cw_multi_test::Executor;
 use factory_utils::msg::{CollectionParams, FactoryUtilsExecuteMsg};
@@ -23,7 +24,7 @@ use crate::common_setup::setup_minter::base_minter::mock_params::{
 };
 use crate::common_setup::setup_minter::common::constants::CREATION_FEE;
 
-pub fn base_minter_cw721_nt_code_ids(router: &mut TerpApp) -> CodeIds {
+pub fn base_minter_cw721_nt_code_ids(router: &mut App) -> CodeIds {
     let minter_code_id = router.store_code(contract_base_minter());
     println!("base_minter_code_id: {minter_code_id}");
 
@@ -39,7 +40,7 @@ pub fn base_minter_cw721_nt_code_ids(router: &mut TerpApp) -> CodeIds {
     }
 }
 
-pub fn base_minter_cw721_collection_code_ids(router: &mut TerpApp) -> CodeIds {
+pub fn base_minter_cw721_collection_code_ids(router: &mut App) -> CodeIds {
     let minter_code_id = router.store_code(contract_base_minter());
     println!("base_minter_code_id: {minter_code_id}");
 
@@ -80,7 +81,7 @@ pub fn setup_minter_contract(setup_params: MinterSetupParams) -> MinterCollectio
 
     let mut msg = mock_create_minter(collection_params);
     msg.collection_params.code_id = cw721_code_id;
-    msg.collection_params.info.creator = minter_admin.to_string();
+    // msg.collection_params.info.creator = minter_admin.to_string();
     let creation_fee = coins(CREATION_FEE, NATIVE_DENOM);
     let msg = FactoryUtilsExecuteMsg::CreateMinter(msg);
 
@@ -89,7 +90,7 @@ pub fn setup_minter_contract(setup_params: MinterSetupParams) -> MinterCollectio
 }
 
 pub fn sudo_update_params(
-    app: &mut TerpApp,
+    app: &mut App,
     collection_responses: &Vec<MinterCollectionResponse>,
     code_ids: CodeIds,
     update_msg: Option<factory_utils::msg::UpdateMinterParamsMsg<Empty>>,
@@ -117,7 +118,7 @@ pub fn sudo_update_params(
 
         let sudo_res = app.sudo(cw_multi_test::SudoMsg::Wasm(cw_multi_test::WasmSudo {
             contract_addr: collection_response.factory.clone().unwrap(),
-            msg: to_json_binary(&sudo_update_msg).unwrap(),
+            message: to_json_binary(&sudo_update_msg).unwrap(),
         }));
         sudo_responses.push(sudo_res);
     }
@@ -125,7 +126,7 @@ pub fn sudo_update_params(
 }
 
 pub fn configure_base_minter(
-    app: &mut TerpApp,
+    app: &mut App,
     minter_admin: Addr,
     collection_params_vec: Vec<CollectionParams>,
     minter_instantiate_params_vec: Vec<MinterInstantiateParams>,

@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::Addr;
-    use cw_multi_test::Executor;
+    use cw_multi_test::{App, Executor};
     
     use earlybird_immutable::msg::*;
     use earlybird_immutable::{helpers::EarlybirdImmutableContract, state::Config};
@@ -35,7 +35,7 @@ mod tests {
     }
 
     pub fn instantiate_with_addresses(
-        app: &mut TerpApp,
+        app: &mut App,
         addrs: Vec<String>,
         per_address_limit: u32,
     ) -> Addr {
@@ -56,7 +56,7 @@ mod tests {
         .unwrap()
     }
 
-    pub fn query_address_count(app: &mut TerpApp, addrs: Vec<String>, wl_addr: Addr) {
+    pub fn query_address_count(app: &mut App, addrs: Vec<String>, wl_addr: Addr) {
         let count: u64 = app
             .wrap()
             .query_wasm_smart(wl_addr, &QueryMsg::AddressCount {})
@@ -64,7 +64,7 @@ mod tests {
         assert_eq!(count, addrs.len() as u64);
     }
 
-    pub fn query_admin(app: &mut TerpApp, wl_addr: Addr) {
+    pub fn query_admin(app: &mut App, wl_addr: Addr) {
         let admin: String = app
             .wrap()
             .query_wasm_smart(wl_addr, &QueryMsg::Admin {})
@@ -72,7 +72,7 @@ mod tests {
         assert_eq!(admin, CREATOR.to_string());
     }
 
-    pub fn query_includes_address(app: &mut TerpApp, wl_addr: Addr, addr_to_check: String) {
+    pub fn query_includes_address(app: &mut App, wl_addr: Addr, addr_to_check: String) {
         let includes: bool = app
             .wrap()
             .query_wasm_smart(
@@ -85,7 +85,7 @@ mod tests {
         assert!(includes);
     }
 
-    pub fn query_per_address_limit(app: &mut TerpApp, wl_addr: Addr, per_address_limit: u32) {
+    pub fn query_per_address_limit(app: &mut App, wl_addr: Addr, per_address_limit: u32) {
         let limit: u32 = app
             .wrap()
             .query_wasm_smart(wl_addr, &QueryMsg::PerAddressLimit {})

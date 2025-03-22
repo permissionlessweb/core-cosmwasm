@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::Addr;
-    use cw_multi_test::Executor;
+    use cw_multi_test::{App, Executor};
 
     use open_edition_factory::helpers::FactoryContract;
     use open_edition_factory::msg::InstantiateMsg;
@@ -13,7 +13,7 @@ mod tests {
 
     const GOVERNANCE: &str = "governance";
 
-    fn proper_instantiate() -> (TerpApp, FactoryContract, OpenEditionMinterParams) {
+    fn proper_instantiate() -> (App, FactoryContract, OpenEditionMinterParams) {
         let mut app = custom_mock_app();
         let factory_id = app.store_code(contract_open_edition_factory());
         let minter_id = 2;

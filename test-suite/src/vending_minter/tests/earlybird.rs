@@ -1,6 +1,6 @@
 use cosmwasm_std::{coin, coins, Addr, Empty, Timestamp};
-use cw721::{Cw721QueryMsg, TokensResponse};
-use cw721_base::ExecuteMsg as Cw721ExecuteMsg;
+use cw721::msg::{Cw721QueryMsg, TokensResponse};
+use cw721_base::msg::ExecuteMsg as Cw721ExecuteMsg;
 use cw_multi_test::Executor;
 use factory_utils::tests::mock_collection_params_1;
 use terp_sdk::{GENESIS_MINT_START_TIME, NATIVE_DENOM};
@@ -266,7 +266,7 @@ fn earlybird_mint_count_query() {
     assert_eq!(res.address, buyer.to_string());
 
     // get random mint token_id
-    let tokens_msg = Cw721QueryMsg::Tokens {
+    let tokens_msg = Cw721QueryMsg::<Empty, Empty, Empty>::Tokens {
         owner: buyer.to_string(),
         start_after: None,
         limit: None,
@@ -278,7 +278,7 @@ fn earlybird_mint_count_query() {
     let sold_token_id: u32 = res.tokens[1].parse::<u32>().unwrap();
     // Buyer transfers NFT to creator
     // random mint token id: 8
-    let transfer_msg: Cw721ExecuteMsg<Empty, Empty> = Cw721ExecuteMsg::TransferNft {
+    let transfer_msg: Cw721ExecuteMsg = Cw721ExecuteMsg::TransferNft {
         recipient: creator.to_string(),
         // token_id: "8".to_string(),
         token_id: sold_token_id.to_string(),
@@ -520,7 +520,7 @@ fn earlybird_access_len_add_remove_expiration() {
     );
 
     // Muyer is generous and transfers to creator
-    let transfer_msg: Cw721ExecuteMsg<Empty, Empty> = Cw721ExecuteMsg::TransferNft {
+    let transfer_msg: Cw721ExecuteMsg = Cw721ExecuteMsg::TransferNft {
         recipient: creator.to_string(),
         token_id: "1".to_string(),
     };

@@ -1,5 +1,5 @@
 use crate::common_setup::contract_boxes::{
-    contract_open_edition_factory, contract_open_edition_minter, contract_cw721_base,
+    contract_cw721_base, contract_open_edition_factory, contract_open_edition_minter,
 };
 use crate::common_setup::msg::{
     MinterCollectionResponse, OpenEditionMinterInstantiateParams, OpenEditionMinterSetupParams,
@@ -8,12 +8,12 @@ use crate::common_setup::setup_minter::base_minter::mock_params::MIN_MINT_PRICE;
 use crate::common_setup::setup_minter::common::parse_response::build_collection_response;
 use anyhow::Error;
 use cosmwasm_std::{coin, coins, to_json_binary, Addr, Coin, Timestamp};
-use cw_multi_test::{AppResponse, Executor};
+use cw_multi_test::{App, AppResponse, Executor};
+use factory_utils::msg::{CollectionParams, FactoryUtilsExecuteMsg};
 use open_edition_factory::msg::{
     OpenEditionMinterInitMsgExtension, OpenEditionUpdateParamsExtension, OpenEditionUpdateParamsMsg,
 };
 use open_edition_factory::types::NftData;
-use factory_utils::msg::{CollectionParams, FactoryUtilsExecuteMsg};
 
 use terp_sdk::NATIVE_DENOM;
 
@@ -100,7 +100,7 @@ pub fn setup_open_edition_minter_contract(
         None,
     );
     msg.collection_params.code_id = cw721_code_id;
-    msg.collection_params.info.creator = minter_admin.to_string();
+    // msg.collection_params.info.creator = minter_admin.to_string();
 
     let creation_fee = coins(CREATION_FEE, NATIVE_DENOM);
     let msg = FactoryUtilsExecuteMsg::CreateMinter(msg);
@@ -118,7 +118,7 @@ pub fn setup_open_edition_minter_contract(
     }
 }
 
-pub fn open_edition_minter_code_ids(router: &mut TerpApp) -> CodeIds {
+pub fn open_edition_minter_code_ids(router: &mut App) -> CodeIds {
     let minter_code_id = router.store_code(contract_open_edition_minter());
 
     let factory_code_id = router.store_code(contract_open_edition_factory());
@@ -133,7 +133,7 @@ pub fn open_edition_minter_code_ids(router: &mut TerpApp) -> CodeIds {
 }
 
 pub fn sudo_update_params(
-    app: &mut TerpApp,
+    app: &mut App,
     collection_responses: &Vec<MinterCollectionResponse>,
     code_ids: CodeIds,
     update_msg: Option<OpenEditionUpdateParamsMsg>,
@@ -168,7 +168,7 @@ pub fn sudo_update_params(
 
         let sudo_res = app.sudo(cw_multi_test::SudoMsg::Wasm(cw_multi_test::WasmSudo {
             contract_addr: collection_response.factory.clone().unwrap(),
-            msg: to_json_binary(&sudo_update_msg).unwrap(),
+            message:to_json_binary(&sudo_update_msg).unwrap(),
         }));
         sudo_responses.push(sudo_res);
     }
@@ -176,7 +176,7 @@ pub fn sudo_update_params(
 }
 
 pub fn configure_open_edition_minter(
-    app: &mut TerpApp,
+    app: &mut App,
     minter_admin: Addr,
     collection_params_vec: Vec<CollectionParams>,
     minter_instantiate_params_vec: Vec<OpenEditionMinterInstantiateParams>,

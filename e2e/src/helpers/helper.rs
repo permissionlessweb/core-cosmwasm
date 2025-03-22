@@ -6,11 +6,11 @@ use cosm_orc::orchestrator::{InstantiateResponse, SigningKey};
 use cosm_tome::chain::request::TxOptions;
 use cosm_tome::modules::bank::model::SendRequest;
 use cosmwasm_std::{Coin, Timestamp, Uint128};
+use factory_utils::msg::CollectionExtensionMsg;
 use factory_utils::{
     msg::{CollectionParams, CreateMinterMsg},
     MinterParams,
 };
-use cw721::CollectionInfo;
 use vending_factory::{
     msg::{InstantiateMsg, VendingMinterInitMsgExtension},
     state::ParamsExtension,
@@ -98,14 +98,13 @@ pub fn create_minter_msg(
             code_id: chain.orc.contract_map.code_id(cw721_NAME).unwrap(),
             name: "Collection".to_string(),
             symbol: "SYM".to_string(),
-            info: CollectionInfo {
-                creator: creator_addr,
-                description: "Description".to_string(),
-                image: "https://example.com/image.png".to_string(),
+            info: CollectionExtensionMsg {
+                description: Some("Description".to_string()),
+                image: Some("https://example.com/image.png".to_string()),
                 start_trading_time,
                 external_link: None,
                 explicit_content: None,
-                residual_info: None,
+                royalty_info: None,
             },
         },
     }

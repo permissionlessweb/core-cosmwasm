@@ -3,12 +3,13 @@ use crate::common_setup::templates::vending_minter_template;
 use crate::common_setup::{
     setup_accounts_and_block::coins_for_msg, setup_accounts_and_block::setup_block_time,
 };
+use cosmwasm_std::Empty;
 use cosmwasm_std::{
     coin, coins,
     testing::{mock_dependencies_with_balance, mock_env, mock_info},
     Api, Coin, Timestamp, Uint128,
 };
-use cw721::{Cw721QueryMsg, OwnerOfResponse};
+use cw721::msg::{Cw721QueryMsg, OwnerOfResponse};
 use cw_multi_test::Executor;
 use factory_utils::tests::mock_collection_params_1;
 use terp_sdk::{GENESIS_MINT_START_TIME, NATIVE_DENOM};
@@ -39,7 +40,7 @@ fn initialization() {
     let mut msg = mock_create_minter(None, collection_params.clone(), None);
     msg.init_msg.num_tokens = 100;
     msg.collection_params.code_id = 1;
-    msg.collection_params.info.creator = info.sender.to_string();
+    // msg.collection_params.info.creator = info.sender.to_string();
 
     instantiate(deps.as_mut(), mock_env(), info, msg.clone()).unwrap_err();
 
@@ -149,7 +150,7 @@ fn happy_path() {
 
     // Check NFT owned by buyer
     // Random mint token_id 1
-    let query_owner_msg = Cw721QueryMsg::OwnerOf {
+    let query_owner_msg = Cw721QueryMsg::<Empty, Empty, Empty>::OwnerOf {
         token_id: String::from("2"),
         include_expired: None,
     };
@@ -208,7 +209,7 @@ fn happy_path() {
     assert_eq!(0, minter_balance.len());
 
     // Check that NFT is transferred
-    let query_owner_msg = Cw721QueryMsg::OwnerOf {
+    let query_owner_msg = Cw721QueryMsg::<Empty, Empty, Empty>::OwnerOf {
         token_id: String::from("1"),
         include_expired: None,
     };

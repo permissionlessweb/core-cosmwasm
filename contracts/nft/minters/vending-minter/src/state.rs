@@ -17,7 +17,7 @@ pub struct ConfigExtension {
 pub type Config = MinterConfig<ConfigExtension>;
 
 pub const CONFIG: Item<Config> = Item::new("config");
-pub const cw721_ADDRESS: Item<Addr> = Item::new("cw721_address");
+pub const CW721_ADDRESS: Item<Addr> = Item::new("cw721_address");
 // map of index position and token id
 pub const MINTABLE_TOKEN_POSITIONS: Map<u32, u32> = Map::new("mt");
 pub const MINTABLE_NUM_TOKENS: Item<u32> = Item::new("mintable_num_tokens");

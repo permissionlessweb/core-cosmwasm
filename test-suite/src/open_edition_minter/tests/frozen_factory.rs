@@ -81,7 +81,7 @@ fn frozen_factory_cannot_create_new_minters() {
         None,
     );
     msg.collection_params.code_id = 3;
-    msg.collection_params.info.creator = creator.to_string();
+    // msg.collection_params.info.creator = creator.to_string();
     let creation_fee = coins(CREATION_FEE, NATIVE_DENOM);
     let msg = FactoryUtilsExecuteMsg::CreateMinter(msg);
     router

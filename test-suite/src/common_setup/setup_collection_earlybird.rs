@@ -1,5 +1,5 @@
 use cosmwasm_std::{coin, Addr, Timestamp};
-use cw_multi_test::Executor;
+use cw_multi_test::{App, Executor};
 
 use terp_sdk::{GENESIS_MINT_START_TIME, NATIVE_DENOM};
 use earlybird::msg::InstantiateMsg as EarlybirdInstantiateMsg;
@@ -13,7 +13,7 @@ const ZERO_FEE_WHITELIST: u128 = 0;
 const WL_PER_ADDRESS_LIMIT: u32 = 1;
 
 pub fn setup_earlybird_contract(
-    router: &mut TerpApp,
+    router: &mut App,
     creator: &Addr,
     earlybird_code_id: Option<u64>,
     denom: Option<&str>,
@@ -50,7 +50,7 @@ pub fn setup_earlybird_contract(
 }
 
 pub fn setup_zero_fee_earlybird_contract(
-    router: &mut TerpApp,
+    router: &mut App,
     creator: &Addr,
     earlybird_code_id: Option<u64>,
 ) -> Addr {
@@ -82,7 +82,7 @@ pub fn setup_zero_fee_earlybird_contract(
 }
 
 pub fn configure_collection_earlybird(
-    router: &mut TerpApp,
+    router: &mut App,
     creator: Addr,
     buyer: Addr,
     minter_addr: Addr,

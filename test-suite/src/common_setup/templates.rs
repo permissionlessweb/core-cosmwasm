@@ -19,7 +19,7 @@ use crate::common_setup::setup_minter::open_edition_minter::minter_params::minte
 use crate::common_setup::setup_minter::open_edition_minter::setup::open_edition_minter_code_ids;
 use crate::common_setup::setup_minter::vending_minter::setup::vending_minter_updatable_code_ids;
 use cosmwasm_std::{coin, Timestamp};
-use cw_multi_test::{AppResponse, BankSudo, SudoMsg};
+use cw_multi_test::{App, AppResponse, BankSudo, SudoMsg};
 use open_edition_factory::msg::OpenEditionMinterInitMsgExtension;
 use open_edition_factory::state::{OpenEditionMinterParams, ParamsExtension};
 use open_edition_factory::types::NftData;
@@ -142,7 +142,7 @@ pub fn vending_minter_with_start_time(
 
 pub fn vending_minter_with_app(
     num_tokens: u32,
-    mut app: TerpApp,
+    mut app: App,
 ) -> MinterTemplateResponse<Accounts> {
     let start_time = Timestamp::from_nanos(GENESIS_MINT_START_TIME);
     let (creator, buyer) = setup_accounts(&mut app);
@@ -211,7 +211,7 @@ pub fn vending_minter_with_cw721_updatable(num_tokens: u32) -> MinterTemplateRes
 
 pub fn vending_minter_updatable_with_app(
     num_tokens: u32,
-    mut app: TerpApp,
+    mut app: App,
 ) -> MinterTemplateResponse<Accounts> {
     let start_time = Timestamp::from_nanos(GENESIS_MINT_START_TIME);
     let (creator, buyer) = setup_accounts(&mut app);
@@ -406,7 +406,7 @@ pub fn open_edition_minter_start_and_end_time(
 }
 
 pub fn open_edition_minter_custom_code_ids(
-    app: TerpApp,
+    app: App,
     params_extension: ParamsExtension,
     init_msg: OpenEditionMinterInitMsgExtension,
     code_ids: CodeIds,

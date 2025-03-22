@@ -35,10 +35,9 @@ cw-storage-plus = { workspace = true }
 cw-utils        = { workspace = true }
 schemars        = { workspace = true }
 serde           = { workspace = true }
-terp-fee             = { workspace = true }
-factory-utils             = { workspace = true }
-minter-utils             = { workspace = true }
-
-terp-sdk          = { workspace = true }
+terp-fee        = { workspace = true }
+factory-utils   = { workspace = true }
+minter-utils    = { workspace = true }
+terp-sdk        = { workspace = true }
 thiserror       = { workspace = true }
 url             = { workspace = true }

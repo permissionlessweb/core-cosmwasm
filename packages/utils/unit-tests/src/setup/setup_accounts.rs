@@ -1,5 +1,5 @@
 use cosmwasm_std::{coins, Addr, Coin, StdResult};
-use cw_multi_test::SudoMsg as CwSudoMsg;
+use cw_multi_test::{App, SudoMsg as CwSudoMsg};
 use cw_multi_test::{BankSudo, SudoMsg};
 
 use terp_sdk::NATIVE_DENOM;
@@ -9,7 +9,7 @@ pub const INITIAL_BALANCE: u128 = 5_000_000_000;
 pub const _MINT_PRICE: u128 = 100_000_000;
 
 // initializes accounts with balances
-pub fn setup_accounts(router: &mut TerpApp) -> StdResult<(Addr, Addr, Addr)> {
+pub fn setup_accounts(router: &mut App) -> StdResult<(Addr, Addr, Addr)> {
     let owner: Addr = Addr::unchecked("owner");
     let bidder: Addr = Addr::unchecked("bidder");
     let creator: Addr = Addr::unchecked("creator");
@@ -55,7 +55,7 @@ pub fn setup_accounts(router: &mut TerpApp) -> StdResult<(Addr, Addr, Addr)> {
 }
 
 pub fn _setup_addtl_account(
-    router: &mut TerpApp,
+    router: &mut App,
     input: &str,
     initial_balance: u128,
 ) -> StdResult<Addr> {

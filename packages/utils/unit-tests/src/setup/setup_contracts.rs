@@ -1,9 +1,7 @@
-use cosmwasm_std::{Addr, Decimal};
-use cw_multi_test::{Contract, ContractWrapper, Executor};
+use cosmwasm_std::{Addr, Decimal, Empty};
+use cw_multi_test::{App, Contract, ContractWrapper, Executor};
 
-use terp_sdk::TerpMsgWrapper;
-
-pub fn contract_residual_registry() -> Box<dyn Contract<TerpMsgWrapper>> {
+pub fn contract_residual_registry() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
         terp_residual_registry::execute::execute,
         terp_residual_registry::instantiate::instantiate,
@@ -13,7 +11,7 @@ pub fn contract_residual_registry() -> Box<dyn Contract<TerpMsgWrapper>> {
     Box::new(contract)
 }
 
-pub fn setup_residual_registry(router: &mut TerpApp, creator: Addr) -> Addr {
+pub fn setup_residual_registry(router: &mut App, creator: Addr) -> Addr {
     let residual_registry_id = router.store_code(contract_residual_registry());
     let msg = terp_residual_registry::msg::InstantiateMsg {
         config: terp_residual_registry::state::Config {

@@ -10,7 +10,7 @@ use crate::common_setup::setup_minter::vending_minter::mock_params::{
 };
 use crate::common_setup::setup_minter::vending_minter::setup::vending_minter_code_ids;
 use cosmwasm_std::{coin, coins, Addr, Timestamp};
-use cw721::TokensResponse;
+use cw721::msg::TokensResponse;
 use cw_multi_test::Executor;
 use factory_utils::msg::FactoryUtilsExecuteMsg;
 use factory_utils::tests::{mock_collection_params, mock_collection_params_1};
@@ -79,7 +79,7 @@ fn zero_mint_price() {
     init_msg.mint_price = coin(MINT_PRICE, NATIVE_DENOM);
     let mut msg = mock_create_minter_init_msg(mock_collection_params(), init_msg);
     msg.collection_params.code_id = cw721_code_id;
-    msg.collection_params.info.creator = minter_admin.to_string();
+    // msg.collection_params.info.creator = minter_admin.to_string();
     let creation_fee = coins(CREATION_FEE, NATIVE_DENOM);
     let msg = FactoryUtilsExecuteMsg::CreateMinter(msg);
 
@@ -169,7 +169,7 @@ fn zero_wl_mint_price() {
     init_msg.mint_price = coin(MINT_PRICE, NATIVE_DENOM);
     let mut msg = mock_create_minter_init_msg(mock_collection_params(), init_msg);
     msg.collection_params.code_id = cw721_code_id;
-    msg.collection_params.info.creator = minter_admin.to_string();
+    // msg.collection_params.info.creator = minter_admin.to_string();
     let creation_fee = coins(CREATION_FEE, NATIVE_DENOM);
     let msg = FactoryUtilsExecuteMsg::CreateMinter(msg);
 
@@ -266,7 +266,7 @@ fn zero_wl_mint_errs_with_min_mint_factory() {
     init_msg.mint_price = coin(min_mint_price, NATIVE_DENOM);
     let mut msg = mock_create_minter_init_msg(mock_collection_params(), init_msg);
     msg.collection_params.code_id = cw721_code_id;
-    msg.collection_params.info.creator = minter_admin.to_string();
+    // msg.collection_params.info.creator = minter_admin.to_string();
     let creation_fee = coins(CREATION_FEE, NATIVE_DENOM);
     let msg = FactoryUtilsExecuteMsg::CreateMinter(msg);
 
